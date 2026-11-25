@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Georref INCRA</title>
+<meta name="theme-color" content="#1f4d3a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--tx:#1d2420;--mut:#5d6b63;--pri:#1f4d3a;--pri2:#2e7055;--bd:#d6ddd8;--err:#b3261e;--warn:#9a6700;--ok:#1e7a3c}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--pri);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:600}
+header .res{margin-left:auto;font-size:13px;opacity:.9}
+nav{display:flex;gap:2px;background:var(--pri2);padding:0 8px;overflow-x:auto}
+nav button{background:none;border:0;color:#dfe9e3;padding:10px 14px;font:inherit;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.on{color:#fff;border-bottom-color:#9fd9b9;font-weight:600}
+main{padding:14px;max-width:1400px;margin:0 auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 14px}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mut)}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--bd);border-radius:5px;background:#fff;color:var(--tx);min-width:0}
+textarea{width:100%;min-height:110px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+button.b{font:inherit;padding:7px 12px;border-radius:5px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.b.sec{background:#fff;color:var(--pri)}
+button.b:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.tw{overflow:auto;max-height:65vh;border:1px solid var(--bd);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid #e7ece9;padding:4px 6px;text-align:left;white-space:nowrap}
+th{background:#eef2ef;position:sticky;top:0;z-index:1;font-weight:600}
+td input,td select{padding:3px 5px;font-size:12.5px}
+td input.conf{width:220px}td input.sm{width:110px}
+tr.sel td{background:#eaf5ee}
+.mut{color:var(--mut)}.err{color:var(--err)}.warn{color:var(--warn)}.ok{color:var(--ok)}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11.5px;font-weight:600}
+.pill.err{background:#fde7e5}.pill.ok{background:#e3f4e8}.pill.warn{background:#fff3d6}
+ul.msgs{margin:6px 0;padding-left:18px}ul.msgs li{margin:2px 0;cursor:pointer}
+.note{background:#f1f6f3;border-left:3px solid var(--pri2);padding:8px 10px;border-radius:4px;font-size:13px}
+svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);border-radius:6px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px}
+.kv b{font-weight:600}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1d2420;color:#fff;padding:8px 14px;border-radius:6px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+.toast.on{opacity:.95}
+@media (max-width:640px){main{padding:8px}.card{padding:10px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Georref INCRA</h1><span class="mut" style="color:#cfe3d8">rotina SIGEF — pré-certificação</span>
+  <span class="res" id="hdrRes"></span>
+</header>
+<nav id="tabs">
+  <button data-t="projeto" class="on">1. Projeto</button>
+  <button data-t="importar">2. Importar pontos</button>
+  <button data-t="vertices">3. Vértices</button>
+  <button data-t="verificar">4. Verificação</button>
+  <button data-t="exportar">5. Exportar</button>
+</nav>
+<main>
+
+<!-- ============ PROJETO ============ -->
+<section id="projeto" class="on">
+  <div class="card">
+    <h2>Credenciado e codificação</h2>
+    <div class="grid">
+      <label>Código do credenciado INCRA<input id="p_cred" placeholder="XXXX" maxlength="6"></label>
+      <label>Próximo nº tipo M<input id="p_iniM" type="number" min="1" value="1"></label>
+      <label>Próximo nº tipo P<input id="p_iniP" type="number" min="1" value="1"></label>
+      <label>Próximo nº tipo V<input id="p_iniV" type="number" min="1" value="1"></label>
+      <label>Responsável técnico<input id="p_rt"></label>
+      <label>Formação / registro (CREA)<input id="p_crea"></label>
+    </div>
+    <p class="note" style="margin-bottom:0">Os códigos dos vértices são únicos por credenciado em todo o SIGEF: informe aqui o próximo número livre de cada tipo (o app atualiza depois de gerar). Enquanto não houver credenciamento, deixe “XXXX” e gere de novo depois com o código do responsável técnico.</p>
+  </div>
+  <div class="card">
+    <h2>Identificação do imóvel (aba “identificacao” do SIGEF)</h2>
+    <div class="grid">
+      <label>Natureza do serviço<select id="p_natserv"><option>Particular</option><option>Contrato com Administração Pública</option></select></label>
+      <label>Tipo de pessoa<select id="p_pessoa"><option>Física</option><option>Jurídica</option></select></label>
+      <label>Nome do proprietário/detentor<input id="p_nome"></label>
+      <label>CPF/CNPJ<input id="p_cpf"></label>
+      <label>Denominação do imóvel<input id="p_denom"></label>
+      <label>Situação<select id="p_sit"><option>Imóvel Registrado</option><option>Área Titulada não Registrada</option><option>Área não Titulada</option></select></label>
+      <label>Natureza da área<select id="p_natarea"><option>Particular</option><option>Assentamento</option><option>Assentamento Parcela</option><option>Estrada</option><option>Ferrovia</option><option>Floresta Pública</option><option>Gleba Pública</option><option>Particular com área pública</option><option>Perímetro Urbano</option><option>Terra Indígena</option><option>Terreno de Marinha</option><option>Terreno Marginal</option><option>Território Quilombola</option><option>Unidade de Conservação</option></select></label>
+      <label>Código do imóvel (SNCR/CCIR)<input id="p_sncr"></label>
+      <label>CNS do cartório<input id="p_cns"></label>
+      <label>Matrícula / transcrição<input id="p_mat"></label>
+      <label>Município<input id="p_mun"></label>
+      <label>UF<input id="p_uf" maxlength="2" value="RS"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Opções de saída</h2>
+    <div class="grid">
+      <label>Casas decimais dos segundos (lat/long)<select id="p_decc"><option>3</option><option>4</option><option>5</option></select></label>
+      <label>Casas decimais de sigmas e altitude<select id="p_decp"><option>2</option><option>3</option></select></label>
+      <label>Origem das coordenadas no memorial (texto livre)<input id="p_base" placeholder="ex.: base corrigida por IBGE-PPP"></label>
+    </div>
+  </div>
+  <div class="row">
+    <button class="b sec" id="btnNovo">Novo projeto</button>
+    <button class="b sec" id="btnSalvarJson">Salvar projeto (.json)</button>
+    <label class="b sec" style="flex-direction:row;color:var(--pri);border:1px solid var(--pri);padding:7px 12px;border-radius:5px;cursor:pointer;font-size:14px">Abrir projeto<input type="file" id="fJson" accept=".json" hidden></label>
+    <span class="mut">O projeto também fica salvo automaticamente neste navegador.</span>
+  </div>
+</section>
+
+<!-- ============ IMPORTAR ============ -->
+<section id="importar">
+  <div class="card">
+    <h2>Arquivo da coletora (CSV/TXT)</h2>
+    <div class="row">
+      <input type="file" id="fCsv" accept=".csv,.txt,.tsv">
+      <label>Coordenadas<select id="i_sist"><option value="utm">UTM SIRGAS 2000</option><option value="geo">Geográficas (graus decimais)</option></select></label>
+      <label>Fuso<select id="i_fuso"><option>21</option><option selected>22</option><option>23</option><option>24</option><option>25</option><option>20</option><option>19</option><option>18</option></select></label>
+      <label>Hemisfério<select id="i_hem"><option>S</option><option>N</option></select></label>
+      <label>Tipo de altitude<select id="i_alt"><option value="geo">Geométrica (elipsoidal)</option><option value="ort">Ortométrica</option></select></label>
+    </div>
+    <p class="mut" style="margin:8px 0 0">Ou cole o conteúdo do arquivo:</p>
+    <textarea id="i_txt" placeholder="Nome;E;N;H;Código;HRMS;VRMS;Solução"></textarea>
+    <div class="row" style="margin-top:8px"><button class="b" id="btnLer">Ler dados</button></div>
+  </div>
+  <div class="card" id="mapCard" style="display:none">
+    <h2>Colunas</h2>
+    <div class="grid" id="mapCols"></div>
+    <p class="note">Se a coletora exporta só uma precisão horizontal (HRMS), o app divide entre latitude e longitude (σ = HRMS/√2), de modo que a precisão posicional fique igual ao HRMS.</p>
+    <div class="row">
+      <label>Filtrar por código (ex.: DIV, CERCA)<input id="i_filtro" placeholder="vazio = todos"></label>
+      <button class="b sec" id="btnFiltro">Aplicar filtro</button>
+      <button class="b sec" id="btnTodos">Marcar todos</button>
+      <button class="b sec" id="btnNenhum">Desmarcar todos</button>
+    </div>
+    <div class="tw" style="margin-top:10px"><table id="tPrev"></table></div>
+    <div class="row" style="margin-top:10px">
+      <label>Valores iniciais: tipo<select id="i_tipo"><option>P</option><option>M</option><option>V</option></select></label>
+      <label>método<select id="i_met"></select></label>
+      <label>limite<select id="i_lim"></select></label>
+      <button class="b" id="btnImportar">Usar pontos marcados como vértices</button>
+      <span class="mut">Substitui a lista atual de vértices.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VÉRTICES ============ -->
+<section id="vertices">
+  <div class="card">
+    <h2>Ordem e códigos</h2>
+    <div class="row">
+      <button class="b sec" id="btnHorario">Sentido horário</button>
+      <button class="b sec" id="btnNorte">Começar pelo mais ao norte</button>
+      <button class="b sec" id="btnInverter">Inverter sentido</button>
+      <button class="b" id="btnCodigos">Gerar códigos SIGEF</button>
+      <span class="mut" id="ordemInfo"></span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Aplicar aos selecionados</h2>
+    <div class="row">
+      <label>Tipo<select id="a_tipo"><option value="">—</option><option>M</option><option>P</option><option>V</option></select></label>
+      <label>Método<select id="a_met"><option value="">—</option></select></label>
+      <label>Limite (lado seguinte)<select id="a_lim"><option value="">—</option></select></label>
+      <label>Confrontante<input id="a_conf" style="width:240px"></label>
+      <label>CNS<input id="a_cns" style="width:100px"></label>
+      <label>Matrícula<input id="a_mat" style="width:110px"></label>
+      <button class="b" id="btnAplicar">Aplicar</button>
+      <button class="b sec" id="btnSelTodos">Selecionar todos</button>
+      <button class="b sec" id="btnSelLimpar">Limpar seleção</button>
+      <button class="b sec" id="btnExcluir">Excluir selecionados</button>
+    </div>
+    <p class="mut" style="margin:8px 0 0">Limite, confrontante, CNS e matrícula valem para o lado que <b>sai</b> do vértice até o próximo. Clique num vértice e depois Shift+clique em outro para selecionar um trecho.</p>
+  </div>
+  <div class="tw"><table id="tVert"></table></div>
+</section>
+
+<!-- ============ VERIFICAR ============ -->
+<section id="verificar">
+  <div class="card">
+    <h2>Resumo</h2>
+    <div class="kv" id="resumoKv"></div>
+  </div>
+  <div class="card">
+    <h2>Pendências</h2>
+    <div id="msgs"></div>
+  </div>
+  <div class="card">
+    <h2>Croqui</h2>
+    <svg id="mapa"></svg>
+    <p class="mut">Vermelho = vértice com erro. Os rótulos mostram a ordem.</p>
+  </div>
+</section>
+
+<!-- ============ EXPORTAR ============ -->
+<section id="exportar">
+  <div class="card" id="expAviso"></div>
+  <div class="card">
+    <h2>Planilha ODS do SIGEF</h2>
+    <p>1) Baixe o modelo vazio em <a href="https://sigef.incra.gov.br/static/sigef_planilha_modelo_1.4_rc5.ods" target="_blank" rel="noopener">sigef.incra.gov.br (planilha modelo)</a> — ou use a versão mais recente indicada no próprio SIGEF.<br>2) Escolha o arquivo abaixo: o app preenche a aba <b>identificacao</b> e grava os vértices na aba <b>perimetro_1</b> a partir da linha 12, com tipo de coordenada <b>Geográfica</b>.<br>3) Abra no LibreOffice e confira antes de enviar.</p>
+    <div class="row">
+      <label>Modelo ODS do SIGEF<input type="file" id="fOds" accept=".ods"></label>
+      <button class="b" id="btnOds">Preencher e baixar ODS</button>
+    </div>
+    <div id="odsAvisos"></div>
+    <p class="note">Alternativa sem modelo: copie as linhas e cole com <b>Ctrl+Shift+V → texto sem formatação</b> na célula <b>A12</b> da aba perimetro_1.</p>
+    <div class="row"><button class="b sec" id="btnCopiar">Copiar linhas dos vértices</button><button class="b sec" id="btnTxt">Baixar TXT (cabeçalho + vértices)</button></div>
+  </div>
+  <div class="card">
+    <h2>Dados da aba identificação</h2>
+    <div class="kv" id="identKv"></div>
+    <div class="row" style="margin-top:8px"><button class="b sec" id="btnCopIdent">Copiar</button></div>
+  </div>
+  <div class="card">
+    <h2>Outras peças</h2>
+    <div class="row">
+      <button class="b sec" id="btnMemorial">Memorial descritivo (prévia)</button>
+      <button class="b sec" id="btnKml">KML</button>
+      <button class="b sec" id="btnCsv">CSV dos vértices</button>
+    </div>
+    <p class="mut">O memorial oficial é gerado pelo SIGEF após a certificação; esta prévia serve para conferência e para o cartório antes do envio.</p>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<script src="core.js"></script>
+<script>
+'use strict';
+const G = window.GeoINCRA, $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+const KEY = 'georref-incra-v1';
+let S = carregar() || novoEstado();
+let imp = null, selAnc = null;
+
+function novoEstado(){ return {proj:{cred:'XXXX',iniM:1,iniP:1,iniV:1,uf:'RS',decc:'3',decp:'2'}, vs:[], sel:[]}; }
+function carregar(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function salvar(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} atualizarHeader(); }
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),2600); }
+function baixar(nome, conteudo, tipo){ const b = conteudo instanceof Blob ? conteudo : new Blob([conteudo],{type:tipo||'text/plain;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=nome; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }
+function nomeArq(){ return (S.proj.denom||S.proj.nome||'imovel').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w-]+/g,'_').slice(0,40); }
+function opt(sel, obj, vazio){ const el=$(sel); el.innerHTML=(vazio?'<option value="">—</option>':'')+Object.entries(obj).map(([k,v])=>`<option value="${k}">${k} – ${Array.isArray(v)?v[0]:v}</option>`).join(''); }
+const opO = { dec(){ return {decCoord:+S.proj.decc||3, decPrec:+S.proj.decp||2, altTipo:S.proj.altTipo}; } };
+
+// ---------- abas ----------
+$$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b)); $$('main section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t)); if(b.dataset.t==='vertices') renderVert(); if(b.dataset.t==='verificar') renderVerif(); if(b.dataset.t==='exportar') renderExp(); window.scrollTo(0,0); });
+function irPara(t){ $(`#tabs button[data-t="${t}"]`).click(); }
+
+// ---------- projeto ----------
+const CAMPOS = ['cred','iniM','iniP','iniV','rt','crea','natserv','pessoa','nome','cpf','denom','sit','natarea','sncr','cns','mat','mun','uf','decc','decp','base'];
+function preencherProjeto(){ CAMPOS.forEach(c=>{ const el=$('#p_'+c); if(el && S.proj[c]!==undefined) el.value=S.proj[c]; }); }
+CAMPOS.forEach(c=>{ const el=$('#p_'+c); if(el) el.addEventListener('input',()=>{ S.proj[c]=el.value; salvar(); }); });
+$('#btnNovo').onclick=()=>{ if(!confirm('Começar um projeto novo? O projeto atual será apagado deste navegador (salve o .json antes, se quiser).')) return; const cont={cred:S.proj.cred,iniM:S.proj.iniM,iniP:S.proj.iniP,iniV:S.proj.iniV,rt:S.proj.rt,crea:S.proj.crea}; S=novoEstado(); Object.assign(S.proj,cont); salvar(); preencherProjeto(); toast('Projeto novo criado (credenciado e numeração mantidos).'); };
+$('#btnSalvarJson').onclick=()=>baixar(nomeArq()+'_georref.json', JSON.stringify(S,null,1),'application/json');
+$('#fJson').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const o=JSON.parse(await f.text()); if(!o.proj||!Array.isArray(o.vs)) throw 0; S=o; S.sel=S.sel||[]; salvar(); preencherProjeto(); toast('Projeto aberto: '+S.vs.length+' vértices.'); }catch(err){ alert('Arquivo de projeto inválido.'); } e.target.value=''; };
+
+// ---------- importar ----------
+opt('#i_met',G.METODOS); opt('#i_lim',G.LIMITES); $('#i_met').value='PG6'; $('#i_lim').value='LA1';
+opt('#a_met',G.METODOS,true); opt('#a_lim',G.LIMITES,true);
+$('#fCsv').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const buf=await f.arrayBuffer(); let t=new TextDecoder('utf-8').decode(buf); if(t.includes('�')) t=new TextDecoder('windows-1252').decode(buf); $('#i_txt').value=t; lerDados(); };
+$('#btnLer').onclick=lerDados;
+const COLS = [['nome','Nome do ponto'],['codigo','Código/descrição'],['e','E (UTM)'],['n','N (UTM)'],['lat','Latitude'],['lon','Longitude'],['h','Altitude'],['sl','σ longitude/E'],['sb','σ latitude/N'],['hrms','HRMS (precisão horiz.)'],['sh','σ altitude/VRMS'],['sol','Solução (Fixo/Float)']];
+function lerDados(){
+  const t=$('#i_txt').value; if(!t.trim()) return toast('Nenhum dado para ler.');
+  const tb=G.lerTabela(t); const m=G.adivinharColunas(tb.cab);
+  if(m.e<0 && m.lat<0 && tb.rows[0]){ // tenta achar colunas numéricas grandes
+    const r=tb.rows[0].map(G.numero); r.forEach((v,i)=>{ if(v>100000&&v<1000000&&m.e<0) m.e=i; else if(v>1000000&&m.n<0) m.n=i; });
+  }
+  if(m.lat>=0 && m.e<0) $('#i_sist').value='geo';
+  imp={...tb,m,marc:tb.rows.map(()=>true)};
+  $('#mapCols').innerHTML=COLS.map(([k,l])=>`<label>${l}<select data-c="${k}"><option value="-1">—</option>${tb.cab.map((c,i)=>`<option value="${i}" ${m[k]===i?'selected':''}>${G.esc(c)}</option>`).join('')}</select></label>`).join('');
+  $$('#mapCols select').forEach(s=>s.onchange=()=>{ imp.m[s.dataset.c]=+s.value; renderPrev(); });
+  $('#mapCard').style.display=''; renderPrev();
+}
+function renderPrev(){
+  if(!imp) return;
+  const tb=imp; let h='<tr><th><input type="checkbox" id="chkAll" checked></th><th>#</th>'+tb.cab.map(c=>`<th>${G.esc(c)}</th>`).join('')+'</tr>';
+  h+=tb.rows.map((r,i)=>`<tr><td><input type="checkbox" data-i="${i}" ${tb.marc[i]?'checked':''}></td><td>${i+1}</td>${r.map(c=>`<td>${G.esc(c)}</td>`).join('')}</tr>`).join('');
+  $('#tPrev').innerHTML=h;
+  $$('#tPrev input[data-i]').forEach(c=>c.onchange=()=>tb.marc[+c.dataset.i]=c.checked);
+  $('#chkAll').onchange=e=>{ tb.marc=tb.marc.map(()=>e.target.checked); renderPrev(); };
+}
+$('#btnTodos').onclick=()=>{ if(imp){ imp.marc=imp.marc.map(()=>true); renderPrev(); } };
+$('#btnNenhum').onclick=()=>{ if(imp){ imp.marc=imp.marc.map(()=>false); renderPrev(); } };
+$('#btnFiltro').onclick=()=>{ if(!imp) return; const f=$('#i_filtro').value.trim().toLowerCase(); const ci=imp.m.codigo; imp.marc=imp.rows.map(r=>!f || (ci>=0 && (r[ci]||'').toLowerCase().includes(f)) || (imp.m.nome>=0 && (r[imp.m.nome]||'').toLowerCase().includes(f))); renderPrev(); };
+$('#btnImportar').onclick=()=>{
+  if(!imp) return; const m=imp.m, geo=$('#i_sist').value==='geo', fuso=+$('#i_fuso').value, hem=$('#i_hem').value;
+  if(geo ? (m.lat<0||m.lon<0) : (m.e<0||m.n<0)) return alert('Indique as colunas de coordenadas.');
+  const get=(r,k)=>m[k]>=0?G.numero(r[m[k]]):NaN; const novos=[]; const falhas=[];
+  imp.rows.forEach((r,i)=>{ if(!imp.marc[i]) return;
+    let lat,lon; if(geo){ lat=get(r,'lat'); lon=get(r,'lon'); } else { const E=get(r,'e'), N=get(r,'n'); if(isFinite(E)&&isFinite(N)){ const g=G.utmParaGeo(E,N,fuso,hem); lat=g.lat; lon=g.lon; } }
+    if(!isFinite(lat)||!isFinite(lon)) { falhas.push(i+1); return; }
+    let sl=get(r,'sl'), sb=get(r,'sb'); const hr=get(r,'hrms');
+    if(!(sl>0)||!(sb>0)){ if(hr>0){ sl=sb=hr/Math.SQRT2; } }
+    novos.push({nome:m.nome>=0?r[m.nome]:String(i+1), desc:m.codigo>=0?r[m.codigo]:'', lat,lon,h:get(r,'h'), sl:isFinite(sl)?sl:'', sb:isFinite(sb)?sb:'', sh:isFinite(get(r,'sh'))?get(r,'sh'):'', solucao:m.sol>=0?r[m.sol]:'', tipo:$('#i_tipo').value, metodo:$('#i_met').value, limite:$('#i_lim').value, conf:'', cns:'', mat:'', codigo:''});
+  });
+  if(novos.length<3) return alert('Marque pelo menos 3 pontos com coordenadas válidas.');
+  if(S.vs.length && !confirm(`Substituir os ${S.vs.length} vértices atuais por ${novos.length} novos?`)) return;
+  S.vs=novos; S.sel=[]; S.proj.altTipo=$('#i_alt').value; S.proj.fuso=fuso; S.proj.hem=hem; salvar();
+  toast(`${novos.length} vértices importados`+(falhas.length?` (${falhas.length} linhas sem coordenadas ignoradas)`:''));
+  irPara('vertices');
+};
+
+// ---------- vértices ----------
+function renderVert(){
+  const vs=S.vs, sel=new Set(S.sel);
+  if(!vs.length){ $('#tVert').innerHTML='<tr><td class="mut" style="padding:14px">Nenhum vértice. Importe os pontos na aba 2.</td></tr>'; $('#ordemInfo').textContent=''; return; }
+  const r=G.resumo(vs); $('#ordemInfo').innerHTML=`${vs.length} vértices · sentido <b>${r.horario?'horário':'anti-horário'}</b>`;
+  const ver=G.verificar(vs,opO.dec()); const errI=new Set(ver.erros.filter(e=>e.i!==undefined).map(e=>e.i));
+  const L=G.lados(vs);
+  let h='<tr><th></th><th>#</th><th>Ponto</th><th>Código SIGEF</th><th>Tipo</th><th>Método</th><th>σ lon</th><th>σ lat</th><th>σ alt</th><th>Precisão</th><th>Limite →</th><th>Confrontante →</th><th>CNS</th><th>Matrícula</th><th>Lado (m)</th><th></th></tr>';
+  const metOpts=Object.keys(G.METODOS).map(k=>`<option>${k}</option>`).join(''), limOpts=Object.keys(G.LIMITES).map(k=>`<option title="${G.LIMITES[k]}">${k}</option>`).join('');
+  vs.forEach((v,i)=>{
+    const pp=G.precisaoPosicional(v), lim=G.limiteExigido(vs,i), okp=v.tipo==='V'||pp<=lim;
+    h+=`<tr data-i="${i}" class="${sel.has(i)?'sel':''}"><td><input type="checkbox" class="sel" ${sel.has(i)?'checked':''}></td><td>${i+1}</td>
+    <td title="${G.esc(v.desc||'')}">${G.esc(v.nome)}</td><td>${v.codigo?G.esc(v.codigo):'<span class="mut">—</span>'}</td>
+    <td><select data-f="tipo">${['M','P','V'].map(t=>`<option ${v.tipo===t?'selected':''}>${t}</option>`).join('')}</select></td>
+    <td><select data-f="metodo">${metOpts.replace(`<option>${v.metodo}</option>`,`<option selected>${v.metodo}</option>`)}</select></td>
+    <td><input class="sm" style="width:64px" data-f="sl" value="${v.sl===''?'':(+v.sl).toFixed(3)}"></td>
+    <td><input class="sm" style="width:64px" data-f="sb" value="${v.sb===''?'':(+v.sb).toFixed(3)}"></td>
+    <td><input class="sm" style="width:64px" data-f="sh" value="${v.sh===''?'':(+v.sh).toFixed(3)}"></td>
+    <td class="${okp?'ok':'err'}">${v.tipo==='V'?'—':G.num(pp,3)} <span class="mut">/ ${G.num(lim,2)}</span></td>
+    <td><select data-f="limite">${limOpts.replace(`>${v.limite}</option>`,` selected>${v.limite}</option>`)}</select></td>
+    <td><input class="conf" data-f="conf" value="${G.esc(v.conf||'')}"></td>
+    <td><input class="sm" style="width:80px" data-f="cns" value="${G.esc(v.cns||'')}"></td>
+    <td><input class="sm" style="width:90px" data-f="mat" value="${G.esc(v.mat||'')}"></td>
+    <td>${G.num(L[i].dist,2)}</td>
+    <td>${errI.has(i)?'<span class="pill err">!</span>':'<span class="pill ok">ok</span>'} <button class="b sec" data-mv="-1" title="Subir" style="padding:1px 6px">↑</button><button class="b sec" data-mv="1" title="Descer" style="padding:1px 6px">↓</button></td></tr>`;
+  });
+  $('#tVert').innerHTML=h;
+  $$('#tVert tr[data-i]').forEach(tr=>{
+    const i=+tr.dataset.i;
+    tr.querySelectorAll('[data-f]').forEach(el=>el.onchange=()=>{ const f=el.dataset.f; let val=el.value; if(['sl','sb','sh'].includes(f)) val=isFinite(G.numero(val))?G.numero(val):''; S.vs[i][f]=val; if(f==='tipo') S.vs[i].codigo=''; salvar(); renderVert(); });
+    tr.querySelector('.sel').onclick=e=>{ const s=new Set(S.sel); if(e.shiftKey && selAnc!==null){ const [a,b]=[Math.min(selAnc,i),Math.max(selAnc,i)]; for(let k=a;k<=b;k++) s.add(k); } else { e.target.checked?s.add(i):s.delete(i); selAnc=i; } S.sel=[...s]; renderVert(); };
+    tr.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{ const j=i+(+b.dataset.mv); if(j<0||j>=S.vs.length) return; [S.vs[i],S.vs[j]]=[S.vs[j],S.vs[i]]; S.sel=[]; salvar(); renderVert(); });
+  });
+}
+function reordenar(fn){ if(S.vs.length<3) return; fn(); S.sel=[]; salvar(); renderVert(); }
+$('#btnHorario').onclick=()=>reordenar(()=>{ if(!G.resumo(S.vs).horario){ inverter(); toast('Sentido invertido para horário.'); } else toast('Já está no sentido horário.'); });
+function inverter(){ // inverte mantendo o 1º vértice e transferindo atributos de lado
+  const vs=S.vs, nv=[vs[0], ...vs.slice(1).reverse()];
+  const lado=v=>({limite:v.limite,conf:v.conf,cns:v.cns,mat:v.mat});
+  const ladosNovos=nv.map((v,k)=>{ const prox=nv[(k+1)%nv.length]; return lado(prox); }); // lado k (nv[k]→nv[k+1]) era antes prox→v, guardado em prox
+  nv.forEach((v,k)=>Object.assign(v,ladosNovos[k])); S.vs=nv.map(v=>({...v}));
+}
+$('#btnInverter').onclick=()=>reordenar(inverter);
+$('#btnNorte').onclick=()=>reordenar(()=>{ let k=0; S.vs.forEach((v,i)=>{ if(v.lat>S.vs[k].lat) k=i; }); S.vs=S.vs.slice(k).concat(S.vs.slice(0,k)); toast('Começando pelo vértice mais ao norte.'); });
+$('#btnCodigos').onclick=()=>{
+  if(!S.vs.length) return; const cred=(S.proj.cred||'XXXX').trim().toUpperCase();
+  if(S.vs.some(v=>v.codigo) && !confirm('Regerar todos os códigos? Os códigos atuais serão substituídos.')) return;
+  const ini={M:S.proj.iniM,P:S.proj.iniP,V:S.proj.iniV};
+  const prox=G.gerarCodigos(S.vs,cred,ini);
+  if(cred!=='XXXX'){ S.proj.iniM=prox.M; S.proj.iniP=prox.P; S.proj.iniV=prox.V; preencherProjeto(); toast(`Códigos gerados. Próximos números: M ${prox.M}, P ${prox.P}, V ${prox.V}.`); }
+  else toast('Códigos provisórios (XXXX) gerados — a numeração não foi avançada.');
+  salvar(); renderVert();
+};
+$('#btnAplicar').onclick=()=>{
+  if(!S.sel.length) return toast('Selecione vértices primeiro.');
+  const t=$('#a_tipo').value,m=$('#a_met').value,l=$('#a_lim').value,c=$('#a_conf').value.trim(),cn=$('#a_cns').value.trim(),ma=$('#a_mat').value.trim();
+  S.sel.forEach(i=>{ const v=S.vs[i]; if(t){ if(v.tipo!==t) v.codigo=''; v.tipo=t; } if(m) v.metodo=m; if(l) v.limite=l; if(c) v.conf=c; if(cn) v.cns=cn; if(ma) v.mat=ma; });
+  salvar(); renderVert(); toast(`Aplicado a ${S.sel.length} vértices.`);
+};
+$('#btnSelTodos').onclick=()=>{ S.sel=S.vs.map((_,i)=>i); renderVert(); };
+$('#btnSelLimpar').onclick=()=>{ S.sel=[]; renderVert(); };
+$('#btnExcluir').onclick=()=>{ if(!S.sel.length) return; if(!confirm(`Excluir ${S.sel.length} vértices?`)) return; const s=new Set(S.sel); S.vs=S.vs.filter((_,i)=>!s.has(i)); S.sel=[]; salvar(); renderVert(); };
+
+// ---------- verificação ----------
+function renderVerif(){
+  const vs=S.vs; if(vs.length<3){ $('#resumoKv').innerHTML='<span class="mut">Importe pelo menos 3 vértices.</span>'; $('#msgs').innerHTML=''; $('#mapa').innerHTML=''; return; }
+  const r=G.resumo(vs), ver=G.verificar(vs,opO.dec());
+  const cont=vs.reduce((o,v)=>(o[v.tipo]=(o[v.tipo]||0)+1,o),{});
+  const pmax=Math.max(...vs.filter(v=>v.tipo!=='V').map(G.precisaoPosicional));
+  $('#resumoKv').innerHTML=`<b>Área (SGL)</b><span>${G.numBR(r.area/10000,4)} ha (${G.numBR(r.area,2)} m²)</span><b>Perímetro</b><span>${G.numBR(r.perimetro,2)} m</span><b>Vértices</b><span>${vs.length} (M: ${cont.M||0}, P: ${cont.P||0}, V: ${cont.V||0})</span><b>Pior precisão posicional</b><span>${isFinite(pmax)?G.num(pmax,3)+' m':'—'}</span><b>Sentido</b><span>${r.horario?'horário':'anti-horário'}</span><b>Situação</b><span>${ver.erros.length?`<span class="pill err">${ver.erros.length} erro(s)</span>`:'<span class="pill ok">sem erros</span>'} ${ver.avisos.length?`<span class="pill warn">${ver.avisos.length} aviso(s)</span>`:''}</span>`;
+  const agrupa=l=>{ const cred=l.filter(x=>x.grupo==='cred'); const out=l.filter(x=>x.grupo!=='cred'); if(cred.length) out.unshift({msg:`${cred.length} vértice(s) com código provisório “XXXX” — troque pelo código do credenciado e gere os códigos de novo.`}); return out; };
+  const li=(l,cls)=>l.map(x=>`<li class="${cls}" ${x.i!==undefined?`data-i="${x.i}"`:''}>${G.esc(x.msg)}</li>`).join('');
+  $('#msgs').innerHTML=(ver.erros.length?`<b class="err">Erros (impedem o envio)</b><ul class="msgs">${li(ver.erros,'err')}</ul>`:'<p class="ok">Nenhum erro encontrado nas regras verificadas.</p>')+(ver.avisos.length?`<b class="warn">Avisos</b><ul class="msgs">${li(agrupa(ver.avisos),'warn')}</ul>`:'')+'<p class="mut">Regras verificadas: códigos, tipos de vértice × método, método × limite, precisão posicional (0,50 m artificial; 3,00 m natural), confrontantes, sentido, autointerseção e vértices coincidentes. A sobreposição com outras parcelas só o SIGEF verifica.</p>';
+  $$('#msgs li[data-i]').forEach(li=>li.onclick=()=>{ S.sel=[+li.dataset.i]; irPara('vertices'); setTimeout(()=>{ const tr=$(`#tVert tr[data-i="${li.dataset.i}"]`); tr&&tr.scrollIntoView({block:'center'}); },50); });
+  desenhar(vs, new Set(ver.erros.filter(e=>e.i!==undefined).map(e=>e.i)));
+}
+function desenhar(vs, errI){
+  const p=G.paraSGL(vs), xs=p.map(q=>q.e), ys=p.map(q=>q.n);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const W=1000,H=440,pad=40, sc=Math.min((W-2*pad)/(maxx-minx||1),(H-2*pad)/(maxy-miny||1));
+  const ox=(W-(maxx-minx)*sc)/2, oy=(H-(maxy-miny)*sc)/2;
+  const X=e=>ox+(e-minx)*sc, Y=n=>H-oy-(n-miny)*sc;
+  const cor=l=>l&&l.startsWith('LN')?'#1a6fb3':'#2e7055';
+  let s=`<rect width="${W}" height="${H}" fill="none"/>`;
+  s+=`<polygon points="${p.map(q=>X(q.e)+','+Y(q.n)).join(' ')}" fill="#2e705518" stroke="none"/>`;
+  p.forEach((q,i)=>{ const r=p[(i+1)%p.length]; s+=`<line x1="${X(q.e)}" y1="${Y(q.n)}" x2="${X(r.e)}" y2="${Y(r.n)}" stroke="${cor(vs[i].limite)}" stroke-width="2"><title>${G.esc(vs[i].limite+' – '+(vs[i].conf||''))}</title></line>`; });
+  p.forEach((q,i)=>{ s+=`<circle cx="${X(q.e)}" cy="${Y(q.n)}" r="4.5" fill="${errI.has(i)?'#b3261e':'#fff'}" stroke="#1d2420"><title>${G.esc((vs[i].codigo||vs[i].nome))}</title></circle><text x="${X(q.e)+7}" y="${Y(q.n)-6}" font-size="12" fill="#1d2420">${i+1}</text>`; });
+  s+=`<g transform="translate(${W-30},40)"><path d="M0,-22 L7,0 L0,-5 L-7,0Z" fill="#1d2420"/><text y="14" text-anchor="middle" font-size="12">N</text></g>`;
+  s+=`<text x="10" y="${H-10}" font-size="11" fill="#5d6b63">verde = limite artificial · azul = limite natural</text>`;
+  $('#mapa').setAttribute('viewBox',`0 0 ${W} ${H}`); $('#mapa').innerHTML=s;
+}
+
+// ---------- exportar ----------
+function identificacao(){ const p=S.proj; return [['Natureza do Serviço',p.natserv||'Particular'],['Tipo Pessoa',p.pessoa||'Física'],['Nome',p.nome||''],['CPF/CNPJ',p.cpf||''],['Denominação',p.denom||''],['Situação',p.sit||'Imóvel Registrado'],['Natureza da Área',p.natarea||'Particular'],['Código do Imóvel (SNCR/INCRA)',p.sncr||''],['Código do cartório (CNS)',p.cns||''],['Matrícula',p.mat||''],['Município - UF',(p.mun||'')+(p.uf?' - '+p.uf:'')]]; }
+function renderExp(){
+  const ver=S.vs.length>=3?G.verificar(S.vs,opO.dec()):{erros:[{msg:'sem vértices'}],avisos:[]};
+  $('#expAviso').innerHTML=ver.erros.length?`<span class="pill err">${ver.erros.length} erro(s)</span> A planilha pode ser gerada para conferência, mas o SIGEF vai recusar enquanto houver erros. <a href="#" id="lkVer">Ver pendências</a>`:'<span class="pill ok">Pronto</span> Nenhum erro nas regras verificadas. Revise tudo antes de enviar ao SIGEF — o envio e a assinatura são feitos por você no portal.';
+  const lk=$('#lkVer'); if(lk) lk.onclick=e=>{ e.preventDefault(); irPara('verificar'); };
+  $('#identKv').innerHTML=identificacao().map(([k,v])=>`<b>${k}</b><span>${G.esc(v)||'<span class="mut">—</span>'}</span>`).join('');
+}
+function exigirVs(){ if(S.vs.length<3){ toast('Importe os vértices primeiro.'); return false; } if(S.vs.some(v=>!v.codigo)){ toast('Gere os códigos SIGEF na aba Vértices.'); return false; } return true; }
+function tsv(){ return G.linhasSigef(S.vs,opO.dec()).map(l=>l.join('\t')).join('\n'); }
+$('#btnCopiar').onclick=async()=>{ if(!exigirVs()) return; try{ await navigator.clipboard.writeText(tsv()); toast('Linhas copiadas — cole em A12 da aba perimetro_1.'); }catch(e){ baixar(nomeArq()+'_vertices.txt',tsv()); toast('Sem acesso à área de transferência — arquivo baixado.'); } };
+$('#btnTxt').onclick=()=>{ if(!exigirVs()) return; const cab=identificacao().map(([k,v])=>`${k}: ${v}`).join('\n'); baixar(nomeArq()+'_sigef.txt', cab+'\n\nperimetro_1\nLado: Externo\n\n'+tsv()+'\n'); };
+$('#btnCopIdent').onclick=async()=>{ const t=identificacao().map(([k,v])=>`${k}\t${v}`).join('\n'); try{ await navigator.clipboard.writeText(t); toast('Identificação copiada.'); }catch(e){ baixar('identificacao.txt',t); } };
+$('#btnOds').onclick=async()=>{
+  if(!exigirVs()) return; const f=$('#fOds').files[0]; if(!f) return toast('Escolha o modelo ODS baixado do SIGEF.');
+  const p=S.proj, o={...opO.dec(), fuso:+(p.fuso||22), hemisferio:p.hem||'S', ident:{natserv:p.natserv||'Particular',pessoa:p.pessoa||'Física',nome:p.nome,cpf:p.cpf,denom:p.denom,sit:p.sit||'Imóvel Registrado',natarea:p.natarea||'Particular',sncr:p.sncr,cns:p.cns,mat:p.mat,transcricao:/transc/i.test(p.mat||''),municipio:p.mun?(p.mun+(p.uf?'-'+p.uf.toUpperCase():'')):''}};
+  if(o.ident.transcricao) o.ident.mat=(p.mat||'').replace(/transcri[cç][aã]o\s*(n[ºo°.]*)?\s*/i,'');
+  try{ const r=await G.preencherOds(await f.arrayBuffer(),S.vs,o,DOMParser,XMLSerializer); baixar(nomeArq()+'_sigef.ods',r.blob); toast(`Planilha gerada: ${S.vs.length} vértices na aba ${r.aba}`+(r.limpas?` (${r.limpas} linhas antigas apagadas)`:'')+'.'); $('#odsAvisos').innerHTML=r.avisos.length?'<b class="warn">Confira:</b><ul class="msgs">'+r.avisos.map(a=>`<li class="warn">${G.esc(a)}</li>`).join('')+'</ul>':'<p class="ok">Identificação e vértices preenchidos.</p>'; }
+  catch(e){ console.error(e); alert('Não foi possível preencher: '+e.message); }
+};
+$('#btnKml').onclick=()=>{ if(S.vs.length<3) return toast('Importe os vértices primeiro.'); baixar(nomeArq()+'.kml',G.kml(S.vs,S.proj.denom||'Imóvel'),'application/vnd.google-earth.kml+xml'); };
+$('#btnCsv').onclick=()=>{ if(S.vs.length<3) return toast('Importe os vértices primeiro.'); const L=G.lados(S.vs); const cab='ordem;codigo;ponto;tipo;latitude;longitude;altitude;sigma_lon;sigma_lat;sigma_alt;precisao;metodo;limite;confrontante;cns;matricula;azimute;distancia_m;E_utm;N_utm'; const fz=+($('#i_fuso').value||22), hm=$('#i_hem').value||'S';
+  const lin=S.vs.map((v,i)=>{ const u=G.geoParaUtm(v.lat,v.lon,fz,hm); return [i+1,v.codigo,v.nome,v.tipo,v.lat.toFixed(10).replace('.',','),v.lon.toFixed(10).replace('.',','),G.num(v.h||0,3),G.num(v.sl||0,3),G.num(v.sb||0,3),G.num(v.sh||0,3),G.num(G.precisaoPosicional(v),3),v.metodo,v.limite,(v.conf||'').replace(/;/g,','),v.cns||'',v.mat||'',G.azTexto(L[i].az),G.num(L[i].dist,2),G.num(u.E,3),G.num(u.N,3)].join(';'); });
+  baixar(nomeArq()+'_vertices.csv','﻿'+cab+'\n'+lin.join('\n'),'text/csv;charset=utf-8'); };
+$('#btnMemorial').onclick=()=>{
+  if(!exigirVs()) return; const p=S.proj, vs=S.vs, L=G.lados(vs), r=G.resumo(vs), dc=+p.decc||3, e=G.esc;
+  const co=v=>`Longitude: ${G.dmsTexto(v.lon,dc,'E','W')}, Latitude: ${G.dmsTexto(v.lat,dc,'N','S')} e Altitude: ${G.num(v.h||0,2)} m`;
+  let txt=`Inicia-se a descrição deste perímetro no vértice <b>${e(vs[0].codigo)}</b>, de coordenadas ${co(vs[0])}; `;
+  vs.forEach((v,i)=>{ const nx=vs[(i+1)%vs.length], ult=i===vs.length-1; const conf=[v.conf, v.cns?'CNS: '+v.cns:'', v.mat?'Mat. '+v.mat:''].filter(Boolean).join(' | ');
+    txt+=`deste, segue confrontando com <b>${e(conf)}</b>, com azimute de ${G.azTexto(L[i].az)} e distância de ${G.num(L[i].dist,2)} m, ${ult?'até o vértice <b>'+e(nx.codigo)+'</b>, ponto inicial da descrição deste perímetro.':'até o vértice <b>'+e(nx.codigo)+'</b>, de coordenadas '+co(nx)+'; '}`; });
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Memorial descritivo – ${e(p.denom||'')}</title><style>body{font:12pt/1.5 'Times New Roman',serif;max-width:800px;margin:30px auto;padding:0 20px;text-align:justify}h1{text-align:center;font-size:14pt}.cab td{padding:2px 8px 2px 0;vertical-align:top}.ass{margin-top:60px;text-align:center}.prev{color:#a00;text-align:center;font-size:10pt}@media print{.prev{display:none}}</style></head><body>
+  <p class="prev">PRÉVIA — conferir antes de usar. O memorial oficial é emitido pelo SIGEF após a certificação.</p>
+  <h1>MEMORIAL DESCRITIVO</h1><table class="cab">
+  <tr><td><b>Imóvel:</b></td><td>${e(p.denom||'')}</td></tr><tr><td><b>Proprietário:</b></td><td>${e(p.nome||'')}${p.cpf?' – CPF/CNPJ: '+e(p.cpf):''}</td></tr>
+  <tr><td><b>Município/UF:</b></td><td>${e(p.mun||'')}${p.uf?' – '+e(p.uf):''}</td></tr><tr><td><b>Matrícula:</b></td><td>${e(p.mat||'')}${p.cns?' – CNS: '+e(p.cns):''}</td></tr>
+  <tr><td><b>Código INCRA (SNCR):</b></td><td>${e(p.sncr||'')}</td></tr><tr><td><b>Área (SGL):</b></td><td>${G.numBR(r.area/10000,4)} ha</td></tr><tr><td><b>Perímetro:</b></td><td>${G.numBR(r.perimetro,2)} m</td></tr></table>
+  <p>${txt}</p><p>Todas as coordenadas aqui descritas estão georreferenciadas ao Sistema Geodésico Brasileiro${p.base?', '+e(p.base):''}, e encontram-se representadas no Sistema de Coordenadas Geodésicas, referenciadas ao SIRGAS 2000. Todos os azimutes e distâncias, área e perímetro foram calculados no Sistema Geodésico Local (SGL).</p>
+  <p style="text-align:right">${e(p.mun||'')}, ${new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}.</p>
+  <div class="ass">_______________________________________<br>${e(p.rt||'Responsável técnico')}<br>${e(p.crea||'')}${p.cred&&p.cred!=='XXXX'?'<br>Código de credenciamento INCRA: '+e(p.cred):''}</div></body></html>`;
+  const w=window.open('','_blank'); if(w){ w.document.write(html); w.document.close(); } else baixar(nomeArq()+'_memorial.html',html,'text/html');
+};
+
+function atualizarHeader(){ const vs=S.vs; if(vs.length>=3){ const r=G.resumo(vs); $('#hdrRes').textContent=`${S.proj.denom||'Imóvel'} · ${vs.length} vértices · ${G.numBR(r.area/10000,4)} ha`; } else $('#hdrRes').textContent=S.proj.denom||''; }
+preencherProjeto(); atualizarHeader();
+if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
