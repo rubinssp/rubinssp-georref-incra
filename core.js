@@ -55,17 +55,54 @@
   }
 
   // Converte lista de vértices {lat,lon,h} para coordenadas planas locais (E,N) com origem no centroide
+  function ecefParaGeo(X, Y, Z) {
+    const lon = Math.atan2(Y, X), p = Math.hypot(X, Y);
+    let lat = Math.atan2(Z, p * (1 - e2)), h = 0;
+    for (let k = 0; k < 8; k++) {
+      const s = Math.sin(lat), Nn = a / Math.sqrt(1 - e2 * s * s);
+      h = p / Math.cos(lat) - Nn;
+      lat = Math.atan2(Z, p * (1 - e2 * Nn / (Nn + h)));
+    }
+    return { lat: lat * DEG, lon: lon * DEG, h };
+  }
+
+  // SGL: origem na média das coordenadas cartesianas geocêntricas (Manual Técnico de Posicionamento)
   function paraSGL(vs) {
-    const lat0 = vs.reduce((s, v) => s + v.lat, 0) / vs.length;
-    const lon0 = vs.reduce((s, v) => s + v.lon, 0) / vs.length;
-    const h0 = vs.reduce((s, v) => s + (v.h || 0), 0) / vs.length;
-    const o = geoParaEcef(lat0, lon0, h0);
-    const sp = Math.sin(lat0 * RAD), cp = Math.cos(lat0 * RAD), sl = Math.sin(lon0 * RAD), cl = Math.cos(lon0 * RAD);
-    return vs.map(v => {
-      const x = geoParaEcef(v.lat, v.lon, v.h || 0);
+    const xs = vs.map(v => geoParaEcef(v.lat, v.lon, v.h || 0));
+    const o = [0, 1, 2].map(k => xs.reduce((t, x) => t + x[k], 0) / xs.length);
+    const g = ecefParaGeo(o[0], o[1], o[2]);
+    const sp = Math.sin(g.lat * RAD), cp = Math.cos(g.lat * RAD), sl = Math.sin(g.lon * RAD), cl = Math.cos(g.lon * RAD);
+    return xs.map(x => {
       const dx = x[0] - o[0], dy = x[1] - o[1], dz = x[2] - o[2];
       return { e: -sl * dx + cl * dy, n: -sp * cl * dx - sp * sl * dy + cp * dz };
     });
+  }
+
+  // Problema geodésico inverso (Vincenty, GRS80) — azimute em graus
+  function azimuteGeodesico(lat1, lon1, lat2, lon2) {
+    const b = a * (1 - f), L = (lon2 - lon1) * RAD;
+    const U1 = Math.atan((1 - f) * Math.tan(lat1 * RAD)), U2 = Math.atan((1 - f) * Math.tan(lat2 * RAD));
+    const sU1 = Math.sin(U1), cU1 = Math.cos(U1), sU2 = Math.sin(U2), cU2 = Math.cos(U2);
+    let lam = L, it = 0, sl, cl, ss, cs, sig, sa, c2a, c2m;
+    do {
+      sl = Math.sin(lam); cl = Math.cos(lam);
+      ss = Math.hypot(cU2 * sl, cU1 * sU2 - sU1 * cU2 * cl);
+      if (ss === 0) return 0;
+      cs = sU1 * sU2 + cU1 * cU2 * cl; sig = Math.atan2(ss, cs);
+      sa = cU1 * cU2 * sl / ss; c2a = 1 - sa * sa;
+      c2m = c2a ? cs - 2 * sU1 * sU2 / c2a : 0;
+      const C = f / 16 * c2a * (4 + f * (4 - 3 * c2a));
+      const lp = lam;
+      lam = L + (1 - C) * f * sa * (sig + C * ss * (c2m + C * cs * (-1 + 2 * c2m * c2m)));
+      if (Math.abs(lam - lp) < 1e-13) break;
+    } while (++it < 200);
+    let az = Math.atan2(cU2 * Math.sin(lam), cU1 * sU2 - sU1 * cU2 * Math.cos(lam)) * DEG;
+    return (az + 360) % 360;
+  }
+
+  function distGeocentrica(v1, v2) {
+    const p = geoParaEcef(v1.lat, v1.lon, v1.h || 0), q = geoParaEcef(v2.lat, v2.lon, v2.h || 0);
+    return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
   }
 
   function areaAssinada(p) { // >0 anti-horário
@@ -74,13 +111,11 @@
     return s / 2;
   }
 
+  // Como no SIGEF: azimute geodésico (problema inverso); distância pelas coordenadas cartesianas geocêntricas
   function lados(vs) {
-    const p = paraSGL(vs);
-    return p.map((pi, i) => {
-      const pj = p[(i + 1) % p.length];
-      const de = pj.e - pi.e, dn = pj.n - pi.n;
-      let az = Math.atan2(de, dn) * DEG; if (az < 0) az += 360;
-      return { dist: Math.hypot(de, dn), az };
+    return vs.map((v, i) => {
+      const w = vs[(i + 1) % vs.length];
+      return { dist: distGeocentrica(v, w), az: azimuteGeodesico(v.lat, v.lon, w.lat, w.lon) };
     });
   }
 
@@ -519,7 +554,7 @@ ${pts}
   }
 
   G.GeoINCRA = {
-    utmParaGeo, geoParaUtm, paraSGL, resumo, lados, autoIntersecoes, dms, dmsTexto, azTexto, num, numBR,
+    utmParaGeo, geoParaUtm, paraSGL, azimuteGeodesico, distGeocentrica, ecefParaGeo, resumo, lados, autoIntersecoes, dms, dmsTexto, azTexto, num, numBR,
     METODOS, LIMITES, PRECISAO, precisaoPosicional, limiteExigido, gerarCodigos, verificar, linhasSigef,
     lerZip, escreverZip, preencherOds, kml, lerTabela, numero, adivinharColunas, areaAssinada, esc
   };

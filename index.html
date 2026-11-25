@@ -74,6 +74,7 @@ svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);b
       <label>Próximo nº tipo V<input id="p_iniV" type="number" min="1" value="1"></label>
       <label>Responsável técnico<input id="p_rt"></label>
       <label>Formação / registro (CREA)<input id="p_crea"></label>
+      <label>Documento de RT (ART/TRT nº)<input id="p_art"></label>
     </div>
     <p class="note" style="margin-bottom:0">Os códigos dos vértices são únicos por credenciado em todo o SIGEF: informe aqui o próximo número livre de cada tipo (o app atualiza depois de gerar). Enquanto não houver credenciamento, deixe “XXXX” e gere de novo depois com o código do responsável técnico.</p>
   </div>
@@ -214,18 +215,26 @@ svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);b
     <div class="row" style="margin-top:8px"><button class="b sec" id="btnCopIdent">Copiar</button></div>
   </div>
   <div class="card">
-    <h2>Outras peças</h2>
+    <h2>Planta e memorial no leiaute do SIGEF (prévia para o cliente)</h2>
     <div class="row">
-      <button class="b sec" id="btnMemorial">Memorial descritivo (prévia)</button>
+      <button class="b" id="btnPlanta">Planta</button>
+      <label>Papel<select id="e_papel"><option>A3</option><option>A4</option></select></label>
+      <button class="b" id="btnMemorial">Memorial descritivo</button>
+    </div>
+    <p class="mut">Abrem em nova aba, prontos para “Imprimir → Salvar como PDF”. Saem com a marca “prévia”: as peças oficiais são emitidas pelo SIGEF após a certificação. Azimutes pelo problema geodésico inverso, distâncias pelas coordenadas geocêntricas e área no SGL, como no SIGEF.</p>
+  </div>
+  <div class="card">
+    <h2>Outros formatos</h2>
+    <div class="row">
       <button class="b sec" id="btnKml">KML</button>
       <button class="b sec" id="btnCsv">CSV dos vértices</button>
     </div>
-    <p class="mut">O memorial oficial é gerado pelo SIGEF após a certificação; esta prévia serve para conferência e para o cartório antes do envio.</p>
   </div>
 </section>
 </main>
 <div class="toast" id="toast"></div>
 <script src="core.js"></script>
+<script src="pecas.js"></script>
 <script>
 'use strict';
 const G = window.GeoINCRA, $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
@@ -247,7 +256,7 @@ $$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.cl
 function irPara(t){ $(`#tabs button[data-t="${t}"]`).click(); }
 
 // ---------- projeto ----------
-const CAMPOS = ['cred','iniM','iniP','iniV','rt','crea','natserv','pessoa','nome','cpf','denom','sit','natarea','sncr','cns','mat','mun','uf','decc','decp','base'];
+const CAMPOS = ['cred','iniM','iniP','iniV','rt','crea','art','natserv','pessoa','nome','cpf','denom','sit','natarea','sncr','cns','mat','mun','uf','decc','decp','base'];
 function preencherProjeto(){ CAMPOS.forEach(c=>{ const el=$('#p_'+c); if(el && S.proj[c]!==undefined) el.value=S.proj[c]; }); }
 CAMPOS.forEach(c=>{ const el=$('#p_'+c); if(el) el.addEventListener('input',()=>{ S.proj[c]=el.value; salvar(); }); });
 $('#btnNovo').onclick=()=>{ if(!confirm('Começar um projeto novo? O projeto atual será apagado deste navegador (salve o .json antes, se quiser).')) return; const cont={cred:S.proj.cred,iniM:S.proj.iniM,iniP:S.proj.iniP,iniV:S.proj.iniV,rt:S.proj.rt,crea:S.proj.crea}; S=novoEstado(); Object.assign(S.proj,cont); salvar(); preencherProjeto(); toast('Projeto novo criado (credenciado e numeração mantidos).'); };
@@ -417,23 +426,9 @@ $('#btnKml').onclick=()=>{ if(S.vs.length<3) return toast('Importe os vértices 
 $('#btnCsv').onclick=()=>{ if(S.vs.length<3) return toast('Importe os vértices primeiro.'); const L=G.lados(S.vs); const cab='ordem;codigo;ponto;tipo;latitude;longitude;altitude;sigma_lon;sigma_lat;sigma_alt;precisao;metodo;limite;confrontante;cns;matricula;azimute;distancia_m;E_utm;N_utm'; const fz=+($('#i_fuso').value||22), hm=$('#i_hem').value||'S';
   const lin=S.vs.map((v,i)=>{ const u=G.geoParaUtm(v.lat,v.lon,fz,hm); return [i+1,v.codigo,v.nome,v.tipo,v.lat.toFixed(10).replace('.',','),v.lon.toFixed(10).replace('.',','),G.num(v.h||0,3),G.num(v.sl||0,3),G.num(v.sb||0,3),G.num(v.sh||0,3),G.num(G.precisaoPosicional(v),3),v.metodo,v.limite,(v.conf||'').replace(/;/g,','),v.cns||'',v.mat||'',G.azTexto(L[i].az),G.num(L[i].dist,2),G.num(u.E,3),G.num(u.N,3)].join(';'); });
   baixar(nomeArq()+'_vertices.csv','﻿'+cab+'\n'+lin.join('\n'),'text/csv;charset=utf-8'); };
-$('#btnMemorial').onclick=()=>{
-  if(!exigirVs()) return; const p=S.proj, vs=S.vs, L=G.lados(vs), r=G.resumo(vs), dc=+p.decc||3, e=G.esc;
-  const co=v=>`Longitude: ${G.dmsTexto(v.lon,dc,'E','W')}, Latitude: ${G.dmsTexto(v.lat,dc,'N','S')} e Altitude: ${G.num(v.h||0,2)} m`;
-  let txt=`Inicia-se a descrição deste perímetro no vértice <b>${e(vs[0].codigo)}</b>, de coordenadas ${co(vs[0])}; `;
-  vs.forEach((v,i)=>{ const nx=vs[(i+1)%vs.length], ult=i===vs.length-1; const conf=[v.conf, v.cns?'CNS: '+v.cns:'', v.mat?'Mat. '+v.mat:''].filter(Boolean).join(' | ');
-    txt+=`deste, segue confrontando com <b>${e(conf)}</b>, com azimute de ${G.azTexto(L[i].az)} e distância de ${G.num(L[i].dist,2)} m, ${ult?'até o vértice <b>'+e(nx.codigo)+'</b>, ponto inicial da descrição deste perímetro.':'até o vértice <b>'+e(nx.codigo)+'</b>, de coordenadas '+co(nx)+'; '}`; });
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Memorial descritivo – ${e(p.denom||'')}</title><style>body{font:12pt/1.5 'Times New Roman',serif;max-width:800px;margin:30px auto;padding:0 20px;text-align:justify}h1{text-align:center;font-size:14pt}.cab td{padding:2px 8px 2px 0;vertical-align:top}.ass{margin-top:60px;text-align:center}.prev{color:#a00;text-align:center;font-size:10pt}@media print{.prev{display:none}}</style></head><body>
-  <p class="prev">PRÉVIA — conferir antes de usar. O memorial oficial é emitido pelo SIGEF após a certificação.</p>
-  <h1>MEMORIAL DESCRITIVO</h1><table class="cab">
-  <tr><td><b>Imóvel:</b></td><td>${e(p.denom||'')}</td></tr><tr><td><b>Proprietário:</b></td><td>${e(p.nome||'')}${p.cpf?' – CPF/CNPJ: '+e(p.cpf):''}</td></tr>
-  <tr><td><b>Município/UF:</b></td><td>${e(p.mun||'')}${p.uf?' – '+e(p.uf):''}</td></tr><tr><td><b>Matrícula:</b></td><td>${e(p.mat||'')}${p.cns?' – CNS: '+e(p.cns):''}</td></tr>
-  <tr><td><b>Código INCRA (SNCR):</b></td><td>${e(p.sncr||'')}</td></tr><tr><td><b>Área (SGL):</b></td><td>${G.numBR(r.area/10000,4)} ha</td></tr><tr><td><b>Perímetro:</b></td><td>${G.numBR(r.perimetro,2)} m</td></tr></table>
-  <p>${txt}</p><p>Todas as coordenadas aqui descritas estão georreferenciadas ao Sistema Geodésico Brasileiro${p.base?', '+e(p.base):''}, e encontram-se representadas no Sistema de Coordenadas Geodésicas, referenciadas ao SIRGAS 2000. Todos os azimutes e distâncias, área e perímetro foram calculados no Sistema Geodésico Local (SGL).</p>
-  <p style="text-align:right">${e(p.mun||'')}, ${new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}.</p>
-  <div class="ass">_______________________________________<br>${e(p.rt||'Responsável técnico')}<br>${e(p.crea||'')}${p.cred&&p.cred!=='XXXX'?'<br>Código de credenciamento INCRA: '+e(p.cred):''}</div></body></html>`;
-  const w=window.open('','_blank'); if(w){ w.document.write(html); w.document.close(); } else baixar(nomeArq()+'_memorial.html',html,'text/html');
-};
+function abrirDoc(html,nome){ const w=window.open('','_blank'); if(w){ w.document.open(); w.document.write(html); w.document.close(); } else { baixar(nome,html,'text/html'); toast('Pop-up bloqueado — arquivo HTML baixado.'); } }
+$('#btnMemorial').onclick=()=>{ if(!exigirVs()) return; abrirDoc(GeoPecas.memorial(S), nomeArq()+'_memorial.html'); };
+$('#btnPlanta').onclick=()=>{ if(!exigirVs()) return; abrirDoc(GeoPecas.planta(S,$('#e_papel').value), nomeArq()+'_planta.html'); };
 
 function atualizarHeader(){ const vs=S.vs; if(vs.length>=3){ const r=G.resumo(vs); $('#hdrRes').textContent=`${S.proj.denom||'Imóvel'} · ${vs.length} vértices · ${G.numBR(r.area/10000,4)} ha`; } else $('#hdrRes').textContent=S.proj.denom||''; }
 preencherProjeto(); atualizarHeader();

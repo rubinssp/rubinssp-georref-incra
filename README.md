@@ -12,13 +12,13 @@ App offline (PWA) para a rotina de georreferenciamento de imóveis rurais **ante
 4. **Gera as peças**:
    - planilha **ODS oficial do SIGEF** preenchida (aba `perimetro_1`, a partir da linha 12);
    - linhas para colar em A12, TXT, KML, CSV;
-   - prévia do memorial descritivo (área, perímetro, azimutes e distâncias calculados no SGL).
+   - **planta** (A3 ou A4 paisagem) e **memorial descritivo** no leiaute do SIGEF, marcados como prévia, para apresentar ao cliente antes da certificação. Os cálculos seguem o SIGEF: azimutes pelo problema geodésico inverso, distâncias e perímetro pelas coordenadas cartesianas geocêntricas e área no SGL (origem na média das coordenadas geocêntricas).
 
 O envio ao SIGEF e a assinatura continuam sendo feitos pelo credenciado no portal, com login gov.br e certificado digital.
 
 ## Publicar no GitHub Pages
 1. Repositório: `rubinssp/rubinssp-georref-incra` (público).
-2. **Add file → Upload files** → envie `index.html`, `core.js`, `sw.js`, `manifest.json`, `icon.svg` e `README.md`.
+2. **Add file → Upload files** → envie `index.html`, `core.js`, `pecas.js`, `sw.js`, `manifest.json`, `icon.svg` e `README.md`.
 3. **Settings → Pages → Branch: main / (root) → Save**.
 4. Acesse `https://rubinssp.github.io/rubinssp-georref-incra/` e instale pelo navegador (“Instalar app” / “Adicionar à tela inicial”).
 
