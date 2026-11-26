@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como usar — Georref INCRA</title>
+<meta name="theme-color" content="#1f4d3a">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--tx:#1d2420;--mut:#5d6b63;--pri:#1f4d3a;--pri2:#2e7055;--bd:#d6ddd8;--err:#b3261e;--warn:#9a6700}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--pri);color:#fff;padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}
+header a{color:#cfe9da;margin-left:auto;text-decoration:none;border:1px solid #6fa88a;padding:5px 12px;border-radius:5px}
+main{max-width:880px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px 20px;margin-bottom:16px}
+h2{font-size:19px;margin:4px 0 10px;color:var(--pri)}
+h3{font-size:16px;margin:18px 0 6px}
+nav.toc ol{margin:0;padding-left:22px}nav.toc a{color:var(--pri2)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+th,td{border:1px solid var(--bd);padding:5px 8px;text-align:left;vertical-align:top}
+th{background:#eef2ef}
+code,kbd{background:#eef2ef;padding:1px 5px;border-radius:3px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+pre{background:#eef2ef;padding:10px;border-radius:6px;overflow:auto;font-size:13px}
+.dica{background:#eaf5ee;border-left:4px solid var(--pri2);padding:8px 12px;border-radius:4px;margin:10px 0}
+.atencao{background:#fff6dc;border-left:4px solid var(--warn);padding:8px 12px;border-radius:4px;margin:10px 0}
+.erro{background:#fde9e7;border-left:4px solid var(--err);padding:8px 12px;border-radius:4px;margin:10px 0}
+ol.passos>li{margin-bottom:6px}
+@media print{header a{display:none}body{background:#fff}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+<header><h1>Georref INCRA — como usar</h1><a href="./">← Voltar ao app</a></header>
+<main>
+
+<div class="card">
+  <p>Este guia mostra o caminho completo: do arquivo da coletora até a planilha ODS do SIGEF e a planta e o memorial para o cliente. O app faz tudo <b>antes</b> do envio. O envio da planilha e a assinatura no SIGEF continuam sendo feitos pelo credenciado, com login gov.br e certificado digital.</p>
+  <nav class="toc"><ol>
+    <li><a href="#fluxo">Visão geral do fluxo</a></li>
+    <li><a href="#campo">Antes de ir a campo</a></li>
+    <li><a href="#projeto">Aba 1 — Projeto</a></li>
+    <li><a href="#importar">Aba 2 — Importar pontos</a></li>
+    <li><a href="#vertices">Aba 3 — Vértices</a></li>
+    <li><a href="#verificar">Aba 4 — Verificação</a></li>
+    <li><a href="#exportar">Aba 5 — Exportar</a></li>
+    <li><a href="#tabelas">Tabelas de referência</a></li>
+    <li><a href="#problemas">Problemas comuns</a></li>
+  </ol></nav>
+</div>
+
+<div class="card" id="fluxo">
+  <h2>1. Visão geral do fluxo</h2>
+  <ol class="passos">
+    <li><b>Projeto:</b> dados do imóvel, do proprietário e do responsável técnico.</li>
+    <li><b>Importar:</b> o CSV/TXT exportado da coletora.</li>
+    <li><b>Vértices:</b> ordem, tipo, método, limite e confrontantes, e depois os códigos SIGEF.</li>
+    <li><b>Verificação:</b> corrigir tudo o que aparecer em vermelho.</li>
+    <li><b>Exportar:</b> planilha ODS preenchida, planta e memorial (prévia), KML e CSV.</li>
+    <li><b>SIGEF:</b> o credenciado confere a planilha no LibreOffice e envia pelo portal.</li>
+  </ol>
+  <div class="dica">O projeto fica salvo automaticamente no navegador. Use <b>Salvar projeto (.json)</b> para guardar uma cópia na pasta do cliente ou abrir em outro computador.</div>
+</div>
+
+<div class="card" id="campo">
+  <h2>2. Antes de ir a campo</h2>
+  <ul>
+    <li><b>Código dos pontos:</b> use um código fixo para os vértices de divisa (por exemplo <code>DIV</code>) e outros para o resto (<code>BASE</code>, <code>BENF</code>, <code>CERCA_INT</code>…). Assim um filtro separa os vértices na importação.</li>
+    <li><b>Ordem de coleta:</b> se possível, percorra a divisa em sequência. O app ajusta o sentido e o vértice inicial, mas não adivinha uma ordem embaralhada.</li>
+    <li><b>Solução FIXA</b> em todos os vértices de limite artificial (cerca, muro, estrada…). Pontos em Float costumam passar de 0,50 m.</li>
+    <li><b>Altitude:</b> o SIGEF pede altitude <b>geométrica (elipsoidal)</b>. Configure a coletora para exportar a altura elipsoidal, ou avise na importação.</li>
+    <li><b>Base:</b> se as coordenadas forem corrigidas por PPP depois, importe o arquivo <b>já corrigido</b>.</li>
+  </ul>
+</div>
+
+<div class="card" id="projeto">
+  <h2>3. Aba 1 — Projeto</h2>
+  <h3>Credenciado e codificação</h3>
+  <table>
+    <tr><th>Campo</th><th>O que colocar</th></tr>
+    <tr><td>Código do credenciado INCRA</td><td>Os 4 caracteres do código de credenciamento do responsável técnico. Enquanto não houver credenciamento, deixe <code>XXXX</code>: os códigos ficam provisórios e a numeração não avança.</td></tr>
+    <tr><td>Próximo nº tipo M / P / V</td><td>O próximo número livre de cada tipo. Os códigos são únicos por credenciado em todo o SIGEF, então confira o último usado (no SIGEF ou no seu controle). O app avança esses números a cada geração com código real.</td></tr>
+    <tr><td>Responsável técnico, formação, documento de RT</td><td>Saem no carimbo da planta e no cabeçalho e na assinatura do memorial. Exemplo de formação: <code>Geógrafo – CREA/RS 000000</code>. Documento de RT: nº da ART/TRT.</td></tr>
+  </table>
+  <h3>Identificação do imóvel</h3>
+  <p>São os mesmos campos da aba <b>identificacao</b> da planilha do SIGEF, e o app os grava lá.</p>
+  <table>
+    <tr><th>Campo</th><th>Observação</th></tr>
+    <tr><td>Natureza do serviço</td><td><b>Particular</b>, na maioria dos casos.</td></tr>
+    <tr><td>Tipo de pessoa / Nome / CPF ou CNPJ</td><td>CPF ou CNPJ só com números ou formatado: o app formata.</td></tr>
+    <tr><td>Denominação</td><td>Nome do imóvel (ex.: Sítio Bela Vista). Também vira o nome dos arquivos.</td></tr>
+    <tr><td>Situação</td><td>Imóvel Registrado, Área Titulada não Registrada ou Área não Titulada.</td></tr>
+    <tr><td>Natureza da área</td><td>Normalmente <b>Particular</b>.</td></tr>
+    <tr><td>Código do imóvel (SNCR/CCIR)</td><td>Do CCIR. Se ficar vazio, o app apaga o valor de exemplo do modelo e avisa.</td></tr>
+    <tr><td>CNS do cartório</td><td>Código Nacional de Serventia do registro de imóveis (formato <code>00.000-0</code>).</td></tr>
+    <tr><td>Matrícula / transcrição</td><td>Só o número (ex.: <code>20759</code>). Para transcrição, escreva <code>Transcrição 57.481</code>: o app troca o rótulo na planilha.</td></tr>
+    <tr><td>Município e UF</td><td>Escreva como no IBGE (ex.: <code>Faxinal do Soturno</code> e <code>RS</code>). O app procura o nome na lista do modelo do SIGEF.</td></tr>
+  </table>
+  <h3>Opções de saída</h3>
+  <p>Mantenha <b>3</b> casas nos segundos e <b>2</b> nos sigmas: é o padrão do modelo do SIGEF. O campo “Origem das coordenadas” entra na nota técnica do memorial (ex.: <code>a partir da base corrigida pelo IBGE-PPP</code>).</p>
+</div>
+
+<div class="card" id="importar">
+  <h2>4. Aba 2 — Importar pontos</h2>
+  <ol class="passos">
+    <li>Escolha o arquivo CSV/TXT da coletora, ou cole o conteúdo na caixa de texto e clique em <b>Ler dados</b>.</li>
+    <li>Informe o sistema: <b>UTM SIRGAS 2000</b> (com fuso e hemisfério; região central do RS = fuso <b>22 S</b>) ou <b>geográficas</b> em graus decimais.</li>
+    <li>Diga se a altitude do arquivo é <b>geométrica</b> ou <b>ortométrica</b>.</li>
+    <li>Confira as <b>colunas</b> que o app reconheceu e corrija as que estiverem erradas.</li>
+    <li>Em <b>Filtrar por código</b>, digite o código dos vértices (ex.: <code>DIV</code>) e clique em <b>Aplicar filtro</b>. Também dá para marcar e desmarcar pontos à mão.</li>
+    <li>Escolha os valores iniciais (tipo, método e limite) e clique em <b>Usar pontos marcados como vértices</b>.</li>
+  </ol>
+  <h3>Formato aceito</h3>
+  <p>Separador vírgula, ponto e vírgula ou tabulação; decimal com ponto ou vírgula. Exemplo:</p>
+<pre>Nome;Codigo;E;N;H;HRMS;VRMS;Solucao
+P1;DIV;262300,000;6754800,000;400,123;0,011;0,019;Fixo
+P2;DIV;262480,000;6754810,000;401,456;0,012;0,020;Fixo</pre>
+  <ul>
+    <li>Com <b>σE e σN</b> (ou σ lon/σ lat), o app usa os dois direto.</li>
+    <li>Com só o <b>HRMS</b>, o app usa σ = HRMS/√2 em cada eixo, de modo que a precisão posicional fique igual ao HRMS.</li>
+    <li>A coluna de <b>solução</b> (Fixo/Float) é opcional, mas permite o aviso de pontos Float.</li>
+  </ul>
+</div>
+
+<div class="card" id="vertices">
+  <h2>5. Aba 3 — Vértices</h2>
+  <h3>5.1 Ordem</h3>
+  <ol class="passos">
+    <li><b>Sentido horário:</b> deixa o perímetro no sentido horário, que é o usual no SIGEF.</li>
+    <li><b>Começar pelo mais ao norte:</b> faz o primeiro vértice ser o de maior latitude, como no memorial do SIGEF.</li>
+    <li>As setas <b>↑ ↓</b> de cada linha corrigem a posição de um ponto fora de ordem.</li>
+  </ol>
+  <div class="atencao">Ajuste a ordem <b>antes</b> de gerar os códigos: os números seguem a ordem da tabela.</div>
+
+  <h3>5.2 A regra do lado “que sai”</h3>
+  <p><b>Limite, confrontante, CNS e matrícula valem para o lado que sai do vértice até o próximo.</b> No exemplo abaixo, o lado P-0003 → P-0004 é o arroio, então o LN1 e o “Arroio Soturno” vão na linha do <b>P-0003</b>.</p>
+  <table>
+    <tr><th>Vértice</th><th>Limite →</th><th>Confrontante →</th><th>Significa</th></tr>
+    <tr><td>P-0002</td><td>LA3</td><td>Estrada Municipal</td><td>lado P-0002 → P-0003</td></tr>
+    <tr><td>P-0003</td><td>LN1</td><td>Arroio Soturno</td><td>lado P-0003 → P-0004</td></tr>
+    <tr><td>P-0004</td><td>LA1</td><td>João da Silva</td><td>lado P-0004 → P-0005</td></tr>
+  </table>
+  <p>Esta é a mesma convenção da planilha do SIGEF.</p>
+
+  <h3>5.3 Preenchimento em lote</h3>
+  <ol class="passos">
+    <li>Marque o primeiro vértice do trecho e depois <kbd>Shift</kbd>+clique no último: o trecho todo fica selecionado.</li>
+    <li>Em <b>Aplicar aos selecionados</b>, preencha só o que muda (tipo, método, limite, confrontante, CNS, matrícula). Campos com “—” ou vazios não são alterados.</li>
+    <li>Clique em <b>Aplicar</b>. Repita para cada confrontante.</li>
+  </ol>
+  <div class="dica">O confrontante sai no memorial exatamente como você escreve. Use o nome completo e, quando houver, a matrícula do vizinho (ex.: <code>Sucessores de Frederico Londero</code>, CNS e matrícula nos campos próprios).</div>
+
+  <h3>5.4 Tipo de vértice e método</h3>
+  <ul>
+    <li><b>M</b> (marco): materializado em campo. <b>P</b> (ponto): ocupado, sem marco. <b>V</b> (virtual): não ocupado (projeção, interseção, imagem).</li>
+    <li>RTK com base própria e rádio UHF: <b>PG6</b>. RTK em rede (NTRIP): <b>PG7</b>. Estático: <b>PG1</b>.</li>
+    <li>Vértice <b>V</b> só aceita métodos indiretos (PA, PS, PB, PT6, PT7). O app avisa se a combinação não for permitida.</li>
+  </ul>
+
+  <h3>5.5 Gerar códigos</h3>
+  <p>Clique em <b>Gerar códigos SIGEF</b>. O formato é <code>CRED-T-0001</code>: CRED é o código do credenciado e T é o tipo (M, P ou V), cada tipo com numeração própria. Se mudar o tipo de um vértice depois, gere os códigos de novo.</p>
+</div>
+
+<div class="card" id="verificar">
+  <h2>6. Aba 4 — Verificação</h2>
+  <p>Mostra área (SGL), perímetro, contagem de vértices, a pior precisão, a lista de pendências e um croqui. Clique numa pendência para ir direto ao vértice.</p>
+  <div class="erro"><b>Erros</b> (vermelho) fazem o SIGEF recusar a planilha: precisão acima do limite, método incompatível, confrontante vazio, código repetido, polígono que se cruza, vértices coincidentes.</div>
+  <div class="atencao"><b>Avisos</b> (amarelo) pedem conferência: código provisório XXXX, ponto em Float, sentido anti-horário, altitude ortométrica, LA6 sem marco.</div>
+  <p><b>Precisão posicional</b> = √(σlat² + σlong²). Limite: <b>0,50 m</b> em limite artificial (LA) e <b>3,00 m</b> em limite natural (LN). Vale o limite mais rigoroso dos dois lados que chegam ao vértice: um vértice entre cerca e arroio precisa de 0,50 m.</p>
+  <p>A sobreposição com imóveis já certificados só o próprio SIGEF verifica.</p>
+</div>
+
+<div class="card" id="exportar">
+  <h2>7. Aba 5 — Exportar</h2>
+  <h3>7.1 Planilha ODS do SIGEF</h3>
+  <ol class="passos">
+    <li>Baixe o modelo vazio no SIGEF (link na própria aba). Guarde uma cópia limpa, sempre do modelo original.</li>
+    <li>Em <b>Modelo ODS do SIGEF</b>, escolha esse arquivo e clique em <b>Preencher e baixar ODS</b>.</li>
+    <li>O app preenche:
+      <ul>
+        <li>aba <b>identificacao</b> com os dados da aba Projeto;</li>
+        <li>aba <b>perimetro_1</b>: tipo de coordenada <b>Geográfica</b>, hemisfério Sul e vértices a partir da <b>linha 12</b>.</li>
+      </ul></li>
+    <li>Leia os avisos que aparecem abaixo do botão (município não encontrado, campos vazios, método fora da lista do modelo).</li>
+    <li>Abra a planilha no <b>LibreOffice Calc</b>, confira as duas abas e salve.</li>
+    <li>O credenciado envia no SIGEF.</li>
+  </ol>
+  <div class="dica">Sem o modelo à mão? Use <b>Copiar linhas dos vértices</b> e cole na célula <b>A12</b> da aba perimetro_1 com <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> → texto sem formatação. A aba identificacao, nesse caso, é preenchida à mão (há um botão para copiar os dados).</div>
+
+  <h3>7.2 Planta e memorial (prévia para o cliente)</h3>
+  <ol class="passos">
+    <li>Escolha o papel (<b>A3</b> para imóveis grandes ou com muitos vértices, <b>A4</b> para os pequenos).</li>
+    <li>Clique em <b>Planta</b> ou <b>Memorial descritivo</b>: abre uma nova aba.</li>
+    <li>Clique em <b>Imprimir / salvar PDF</b> e, no diálogo, escolha <b>Salvar como PDF</b>. Na planta, use margens “nenhuma”.</li>
+  </ol>
+  <p>Os dois saem com a faixa <b>“PRÉVIA PARA CONFERÊNCIA”</b>. Servem para o cliente conferir divisas e confrontantes antes da certificação. As peças oficiais são as emitidas pelo SIGEF depois de certificado.</p>
+  <p>Se o navegador bloquear a nova aba, o app baixa o arquivo HTML: abra-o e imprima do mesmo jeito.</p>
+
+  <h3>7.3 Outros formatos</h3>
+  <ul>
+    <li><b>KML:</b> para conferir no Google Earth ou mostrar ao cliente.</li>
+    <li><b>CSV:</b> tabela completa com coordenadas geográficas e UTM, azimutes e distâncias, para o QGIS ou para uma planilha.</li>
+  </ul>
+</div>
+
+<div class="card" id="tabelas">
+  <h2>8. Tabelas de referência</h2>
+  <h3>Tipos de limite</h3>
+  <table>
+    <tr><th>Artificial (precisão ≤ 0,50 m)</th><th>Natural (precisão ≤ 3,00 m)</th></tr>
+    <tr><td>LA1 Cerca<br>LA2 Muro<br>LA3 Estrada<br>LA4 Vala<br>LA5 Canal<br>LA6 Linha ideal<br>LA7 Limite artificial não tipificado</td>
+        <td>LN1 Corpo d’água ou curso d’água<br>LN2 Linha de cumeada<br>LN3 Grota<br>LN4 Crista de encosta<br>LN5 Pé de encosta<br>LN6 Limite natural não tipificado</td></tr>
+  </table>
+  <h3>Métodos de posicionamento mais usados</h3>
+  <table>
+    <tr><th>Código</th><th>Método</th><th>Vértices</th></tr>
+    <tr><td>PG1</td><td>Relativo estático</td><td>M, P</td></tr>
+    <tr><td>PG2</td><td>Relativo estático-rápido</td><td>M, P</td></tr>
+    <tr><td>PG6</td><td>RTK convencional / RTPPP</td><td>M, P</td></tr>
+    <tr><td>PG7</td><td>RTK em rede</td><td>M, P</td></tr>
+    <tr><td>PG9</td><td>PPP</td><td>M, P</td></tr>
+    <tr><td>PT1–PT9</td><td>Topografia clássica (poligonação, irradiação…)</td><td>M, P (PT6/PT7 também V)</td></tr>
+    <tr><td>PA1–PA3</td><td>Paralela, interseção de retas, projeção técnica</td><td>V</td></tr>
+    <tr><td>PS1–PS4, PB1–PB2</td><td>Sensoriamento remoto e base cartográfica</td><td>V</td></tr>
+  </table>
+  <p>A lista completa está nos menus do app. O modelo ODS antigo (1.2) não aceita PA3, PT9, PB1 e PB2.</p>
+  <h3>Como o app calcula (igual ao SIGEF)</h3>
+  <ul>
+    <li><b>Área:</b> coordenadas cartesianas locais no SGL, com origem na média das coordenadas geocêntricas dos vértices.</li>
+    <li><b>Azimutes:</b> problema geodésico inverso no elipsoide GRS80 (SIRGAS 2000).</li>
+    <li><b>Distâncias e perímetro:</b> coordenadas cartesianas geocêntricas.</li>
+  </ul>
+</div>
+
+<div class="card" id="problemas">
+  <h2>9. Problemas comuns</h2>
+  <table>
+    <tr><th>Situação</th><th>O que fazer</th></tr>
+    <tr><td>As coordenadas caíram longe (outro estado ou no mar)</td><td>Confira o fuso e o hemisfério na importação, e se E e N não ficaram trocados nas colunas.</td></tr>
+    <tr><td>“Precisão acima do limite”</td><td>Recolete o ponto com solução fixa ou, se o lado for de fato natural, corrija o tipo de limite para LN.</td></tr>
+    <tr><td>“Polígono se autointercepta”</td><td>Há um vértice fora de ordem: veja no croqui e corrija com as setas ↑ ↓.</td></tr>
+    <tr><td>“Município não está na lista do modelo”</td><td>Corrija a grafia (com acentos) ou escolha o município na aba identificacao da planilha.</td></tr>
+    <tr><td>Área diferente da calculada no QGIS em UTM</td><td>É esperado: a área do SIGEF é no SGL (plano local) e a do QGIS é na projeção UTM. A diferença costuma ser de poucos décimos por mil.</td></tr>
+    <tr><td>O app não abre sem internet</td><td>Abra pelo menos uma vez com internet e instale (“Instalar app” ou “Adicionar à tela inicial”).</td></tr>
+    <tr><td>Perdi o projeto</td><td>Os dados ficam no navegador onde foram feitos. Para levar para outro aparelho, use Salvar/Abrir projeto (.json).</td></tr>
+  </table>
+</div>
+
+</main>
+</body>
+</html>

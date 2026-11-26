@@ -16,9 +16,12 @@ App offline (PWA) para a rotina de georreferenciamento de imóveis rurais **ante
 
 O envio ao SIGEF e a assinatura continuam sendo feitos pelo credenciado no portal, com login gov.br e certificado digital.
 
+## Como usar
+Veja o guia passo a passo em [`ajuda.html`](https://rubinssp.github.io/rubinssp-georref-incra/ajuda.html), também aberto pelo botão **? Como usar** no app.
+
 ## Publicar no GitHub Pages
 1. Repositório: `rubinssp/rubinssp-georref-incra` (público).
-2. **Add file → Upload files** → envie `index.html`, `core.js`, `pecas.js`, `sw.js`, `manifest.json`, `icon.svg` e `README.md`.
+2. **Add file → Upload files** → envie `index.html`, `core.js`, `pecas.js`, `ajuda.html`, `sw.js`, `manifest.json`, `icon.svg` e `README.md`.
 3. **Settings → Pages → Branch: main / (root) → Save**.
 4. Acesse `https://rubinssp.github.io/rubinssp-georref-incra/` e instale pelo navegador (“Instalar app” / “Adicionar à tela inicial”).
 
