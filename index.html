@@ -67,6 +67,23 @@ svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);b
 <!-- ============ PROJETO ============ -->
 <section id="projeto" class="on">
   <div class="card">
+    <h2>Importar matrícula (opcional)</h2>
+    <p class="mut" style="margin-top:0">PDF da certidão (digital ou escaneado) ou fotos das páginas. Pode escolher vários arquivos de uma vez — eles são lidos em ordem de nome. Você confere cada campo antes de aplicar.</p>
+    <div class="row">
+      <input type="file" id="fMat" accept=".pdf,image/*,.txt" multiple>
+      <button class="b" id="btnLerMat">Ler matrícula</button>
+      <span class="mut" id="matProg"></span>
+    </div>
+    <div id="matRes" style="display:none;margin-top:12px">
+      <div id="matAlertas"></div>
+      <div class="tw" style="max-height:none"><table id="tMat"></table></div>
+      <div id="matPessoas" style="margin-top:10px"></div>
+      <div id="matConf" style="margin-top:10px"></div>
+      <details style="margin-top:10px"><summary>Texto lido da matrícula</summary><textarea id="matTexto" style="min-height:200px" readonly></textarea></details>
+      <div class="row" style="margin-top:10px"><button class="b" id="btnAplicarMat">Aplicar campos marcados ao projeto</button><button class="b sec" id="btnFecharMat">Descartar</button></div>
+    </div>
+  </div>
+  <div class="card">
     <h2>Credenciado e codificação</h2>
     <div class="grid">
       <label>Código do credenciado INCRA<input id="p_cred" placeholder="XXXX" maxlength="6"></label>
@@ -166,7 +183,7 @@ svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);b
       <label>Tipo<select id="a_tipo"><option value="">—</option><option>M</option><option>P</option><option>V</option></select></label>
       <label>Método<select id="a_met"><option value="">—</option></select></label>
       <label>Limite (lado seguinte)<select id="a_lim"><option value="">—</option></select></label>
-      <label>Confrontante<input id="a_conf" style="width:240px"></label>
+      <label>Confrontante<input id="a_conf" list="dlConf" style="width:240px"></label>
       <label>CNS<input id="a_cns" style="width:100px"></label>
       <label>Matrícula<input id="a_mat" style="width:110px"></label>
       <button class="b" id="btnAplicar">Aplicar</button>
@@ -236,6 +253,8 @@ svg#mapa{width:100%;height:440px;background:#fafcfb;border:1px solid var(--bd);b
 <div class="toast" id="toast"></div>
 <script src="core.js"></script>
 <script src="pecas.js"></script>
+<script src="matricula.js"></script>
+<datalist id="dlConf"></datalist>
 <script>
 'use strict';
 const G = window.GeoINCRA, $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
@@ -331,7 +350,7 @@ function renderVert(){
     <td><input class="sm" style="width:64px" data-f="sh" value="${v.sh===''?'':(+v.sh).toFixed(3)}"></td>
     <td class="${okp?'ok':'err'}">${v.tipo==='V'?'—':G.num(pp,3)} <span class="mut">/ ${G.num(lim,2)}</span></td>
     <td><select data-f="limite">${limOpts.replace(`>${v.limite}</option>`,` selected>${v.limite}</option>`)}</select></td>
-    <td><input class="conf" data-f="conf" value="${G.esc(v.conf||'')}"></td>
+    <td><input class="conf" list="dlConf" data-f="conf" value="${G.esc(v.conf||'')}"></td>
     <td><input class="sm" style="width:80px" data-f="cns" value="${G.esc(v.cns||'')}"></td>
     <td><input class="sm" style="width:90px" data-f="mat" value="${G.esc(v.mat||'')}"></td>
     <td>${G.num(L[i].dist,2)}</td>
@@ -380,7 +399,7 @@ function renderVerif(){
   const r=G.resumo(vs), ver=G.verificar(vs,opO.dec());
   const cont=vs.reduce((o,v)=>(o[v.tipo]=(o[v.tipo]||0)+1,o),{});
   const pmax=Math.max(...vs.filter(v=>v.tipo!=='V').map(G.precisaoPosicional));
-  $('#resumoKv').innerHTML=`<b>Área (SGL)</b><span>${G.numBR(r.area/10000,4)} ha (${G.numBR(r.area,2)} m²)</span><b>Perímetro</b><span>${G.numBR(r.perimetro,2)} m</span><b>Vértices</b><span>${vs.length} (M: ${cont.M||0}, P: ${cont.P||0}, V: ${cont.V||0})</span><b>Pior precisão posicional</b><span>${isFinite(pmax)?G.num(pmax,3)+' m':'—'}</span><b>Sentido</b><span>${r.horario?'horário':'anti-horário'}</span><b>Situação</b><span>${ver.erros.length?`<span class="pill err">${ver.erros.length} erro(s)</span>`:'<span class="pill ok">sem erros</span>'} ${ver.avisos.length?`<span class="pill warn">${ver.avisos.length} aviso(s)</span>`:''}</span>`;
+  $('#resumoKv').innerHTML=`<b>Área (SGL)</b><span>${G.numBR(r.area/10000,4)} ha (${G.numBR(r.area,2)} m²)</span><b>Perímetro</b><span>${G.numBR(r.perimetro,2)} m</span><b>Vértices</b><span>${vs.length} (M: ${cont.M||0}, P: ${cont.P||0}, V: ${cont.V||0})</span><b>Pior precisão posicional</b><span>${isFinite(pmax)?G.num(pmax,3)+' m':'—'}</span><b>Sentido</b><span>${r.horario?'horário':'anti-horário'}</span>${S.proj.areaMatricula?`<b>Área da matrícula</b><span>${G.numBR(S.proj.areaMatricula/10000,4)} ha — diferença ${G.numBR((r.area-S.proj.areaMatricula)/10000,4)} ha (${G.numBR((r.area/S.proj.areaMatricula-1)*100,2)}%)</span>`:''}<b>Situação</b><span>${ver.erros.length?`<span class="pill err">${ver.erros.length} erro(s)</span>`:'<span class="pill ok">sem erros</span>'} ${ver.avisos.length?`<span class="pill warn">${ver.avisos.length} aviso(s)</span>`:''}</span>`;
   const agrupa=l=>{ const cred=l.filter(x=>x.grupo==='cred'); const out=l.filter(x=>x.grupo!=='cred'); if(cred.length) out.unshift({msg:`${cred.length} vértice(s) com código provisório “XXXX” — troque pelo código do credenciado e gere os códigos de novo.`}); return out; };
   const li=(l,cls)=>l.map(x=>`<li class="${cls}" ${x.i!==undefined?`data-i="${x.i}"`:''}>${G.esc(x.msg)}</li>`).join('');
   $('#msgs').innerHTML=(ver.erros.length?`<b class="err">Erros (impedem o envio)</b><ul class="msgs">${li(ver.erros,'err')}</ul>`:'<p class="ok">Nenhum erro encontrado nas regras verificadas.</p>')+(ver.avisos.length?`<b class="warn">Avisos</b><ul class="msgs">${li(agrupa(ver.avisos),'warn')}</ul>`:'')+'<p class="mut">Regras verificadas: códigos, tipos de vértice × método, método × limite, precisão posicional (0,50 m artificial; 3,00 m natural), confrontantes, sentido, autointerseção e vértices coincidentes. A sobreposição com outras parcelas só o SIGEF verifica.</p>';
@@ -430,6 +449,43 @@ $('#btnCsv').onclick=()=>{ if(S.vs.length<3) return toast('Importe os vértices 
 function abrirDoc(html,nome){ const w=window.open('','_blank'); if(w){ w.document.open(); w.document.write(html); w.document.close(); } else { baixar(nome,html,'text/html'); toast('Pop-up bloqueado — arquivo HTML baixado.'); } }
 $('#btnMemorial').onclick=()=>{ if(!exigirVs()) return; abrirDoc(GeoPecas.memorial(S), nomeArq()+'_memorial.html'); };
 $('#btnPlanta').onclick=()=>{ if(!exigirVs()) return; abrirDoc(GeoPecas.planta(S,$('#e_papel').value), nomeArq()+'_planta.html'); };
+
+
+// ---------- matrícula ----------
+let MAT=null;
+function atualizarDatalist(){ $('#dlConf').innerHTML=(S.proj.confSug||[]).map(c=>`<option value="${G.esc(c)}">`).join(''); }
+$('#btnLerMat').onclick=async()=>{
+  const fs=$('#fMat').files; if(!fs.length) return toast('Escolha o PDF ou as fotos da matrícula.');
+  const bt=$('#btnLerMat'); bt.disabled=true; $('#matProg').textContent='Lendo…';
+  try{
+    const txt=await GeoMatricula.lerArquivos(fs, m=>$('#matProg').textContent=m);
+    if(txt.replace(/\s/g,'').length<50) throw new Error('Quase nenhum texto foi reconhecido. Tente uma foto mais nítida, bem iluminada e reta.');
+    MAT=GeoMatricula.extrair(txt); mostrarMat(); $('#matProg').textContent=`Pronto: ${MAT.campos.length} campos encontrados.`;
+  }catch(e){ console.error(e); $('#matProg').textContent=''; alert('Não foi possível ler: '+e.message); }
+  bt.disabled=false;
+};
+function mostrarMat(){
+  const r=MAT; $('#matRes').style.display='';
+  $('#matAlertas').innerHTML=r.alertas.length?'<ul class="msgs">'+r.alertas.map(a=>`<li class="warn">${G.esc(a)}</li>`).join('')+'</ul>':'';
+  $('#tMat').innerHTML='<tr><th>Usar</th><th>Campo</th><th>Valor (editável)</th><th>Trecho da matrícula</th></tr>'+r.campos.map((c,i)=>`<tr><td><input type="checkbox" data-mc="${i}" ${c.marcado?'checked':''}></td><td>${G.esc(c.rotulo)}</td><td><input data-mv="${i}" value="${G.esc(c.valor)}" style="width:260px" ${c.chave==='area'?'readonly':''}></td><td class="mut" style="white-space:normal;max-width:480px;font-size:12px">${G.esc(c.trecho)}</td></tr>`).join('');
+  $$('#tMat [data-mc]').forEach(el=>el.onchange=()=>r.campos[+el.dataset.mc].marcado=el.checked);
+  $$('#tMat [data-mv]').forEach(el=>el.oninput=()=>r.campos[+el.dataset.mv].valor=el.value);
+  $('#matPessoas').innerHTML=r.pessoas.length>1?'<b>Pessoas com CPF/CNPJ na matrícula</b> — escolha o detentor que vai na planilha:<br>'+r.pessoas.map((p,i)=>`<label style="flex-direction:row;gap:6px;color:var(--tx);font-size:13px;margin:3px 0"><input type="radio" name="matP" value="${i}" ${r.principal&&p.doc===r.principal.doc?'checked':''}> ${G.esc(p.nome)} — ${G.esc(p.doc)}${p.cpfOk?'':' <span class="warn">(CPF não confere)</span>'}</label>`).join(''):'';
+  $$('input[name=matP]').forEach(el=>el.onchange=()=>{ const p=r.pessoas[+el.value]; r.campos.forEach(c=>{ if(c.chave==='nome') c.valor=p.nome; if(c.chave==='cpf') c.valor=p.doc; }); mostrarMat(); });
+  $('#matConf').innerHTML=r.confrontantes.length?`<b>Confrontantes citados na matrícula</b> <span class="mut">(confira com os atuais em campo)</span><br>${r.confrontantes.map(c=>`<span class="pill" style="background:#eef2ef;margin:2px 4px 2px 0;font-weight:500">${c.lado?c.lado+': ':''}${G.esc(c.nome)}</span>`).join('')}<br><label style="flex-direction:row;gap:6px;color:var(--tx);margin-top:6px"><input type="checkbox" id="matUsarConf" checked> sugerir esses nomes ao digitar confrontantes na aba Vértices</label>${r.confrontacoes?`<p class="mut" style="font-size:12.5px;margin:6px 0 0"><i>${G.esc(r.confrontacoes)}</i></p>`:''}`:'';
+  $('#matTexto').value=r.texto;
+}
+$('#btnAplicarMat').onclick=()=>{
+  if(!MAT) return; let n=0;
+  MAT.campos.forEach(c=>{ if(!c.marcado||!c.valor) return;
+    if(c.chave==='area'){ S.proj.areaMatricula=MAT.areaM2; n++; return; }
+    if(c.chave==='mat'&&/transc/i.test(c.valor)) S.proj.mat=c.valor; else S.proj[c.chave]=c.valor; n++; });
+  if(MAT.areaM2 && MAT.campos.some(c=>c.chave==='area'&&c.marcado)) S.proj.areaMatricula=MAT.areaM2;
+  if($('#matUsarConf')&&$('#matUsarConf').checked){ const set=new Set(S.proj.confSug||[]); MAT.confrontantes.forEach(c=>set.add(c.nome)); S.proj.confSug=[...set]; atualizarDatalist(); }
+  salvar(); preencherProjeto(); $('#matRes').style.display='none'; $('#matProg').textContent=`${n} campos aplicados. Confira os dados abaixo.`; MAT=null;
+};
+$('#btnFecharMat').onclick=()=>{ MAT=null; $('#matRes').style.display='none'; $('#matProg').textContent=''; };
+atualizarDatalist();
 
 function atualizarHeader(){ const vs=S.vs; if(vs.length>=3){ const r=G.resumo(vs); $('#hdrRes').textContent=`${S.proj.denom||'Imóvel'} · ${vs.length} vértices · ${G.numBR(r.area/10000,4)} ha`; } else $('#hdrRes').textContent=S.proj.denom||''; }
 preencherProjeto(); atualizarHeader();

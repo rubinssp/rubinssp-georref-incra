@@ -475,7 +475,7 @@
       if (id.municipio) {
         const alvo = id.municipio.trim();
         const tp = tabs.find(t => t.getAttributeNS(NS.table, 'name') === 'parametros_controles');
-        const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s*-\s*/g, '-').trim();
+        const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/rn/g, 'm').replace(/\s*-\s*/g, '-').trim();
         let achado = null;
         if (tp) for (const p of tp.getElementsByTagNameNS(NS.text, 'p')) if (norm(p.textContent) === norm(alvo)) { achado = p.textContent.trim(); break; }
         if (achado || !tp) cel(tid, 16, 0, achado || alvo);

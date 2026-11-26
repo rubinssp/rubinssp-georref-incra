@@ -75,6 +75,20 @@ ol.passos>li{margin-bottom:6px}
 
 <div class="card" id="projeto">
   <h2>3. Aba 1 — Projeto</h2>
+  <h3>Importar matrícula (opcional)</h3>
+  <ol class="passos">
+    <li>No topo da aba Projeto, escolha o PDF da certidão ou as fotos das páginas. Pode escolher vários arquivos de uma vez (ex.: frente e verso): eles são lidos em ordem de nome.</li>
+    <li>Clique em <b>Ler matrícula</b>. Se o PDF tem texto (certidão digital), a leitura é imediata. Se é escaneado ou foto, o app faz OCR: leva alguns segundos por página e, na primeira vez, baixa cerca de 15 MB (depois funciona offline).</li>
+    <li>Confira a tabela: cada campo mostra o <b>trecho da matrícula</b> de onde saiu. Corrija o valor se o OCR errou e desmarque o que não quiser usar.</li>
+    <li>Se aparecerem várias pessoas com CPF, escolha quem vai como <b>detentor</b> na planilha.</li>
+    <li>Clique em <b>Aplicar campos marcados ao projeto</b>.</li>
+  </ol>
+  <ul>
+    <li>O <b>CNS</b> e o número da <b>matrícula</b> saem do CNM (código nacional de matrícula, no topo da certidão).</li>
+    <li>Os <b>confrontantes antigos</b> citados na matrícula viram sugestões ao digitar confrontantes na aba Vértices. Confira sempre com os confrontantes atuais em campo.</li>
+    <li>A <b>área da matrícula</b> aparece na aba Verificação ao lado da área medida, com a diferença em hectares e em %.</li>
+  </ul>
+  <div class="atencao">O proprietário atual é quem consta no <b>último registro de transmissão</b> (R-…). O app avisa quando há compra e venda, doação ou partilha, mas quem decide é você. Fotos tortas, com sombra ou de matrícula datilografada antiga podem gerar erros de leitura: confira CPF e números.</div>
   <h3>Credenciado e codificação</h3>
   <table>
     <tr><th>Campo</th><th>O que colocar</th></tr>
@@ -242,6 +256,7 @@ P2;DIV;262480,000;6754810,000;401,456;0,012;0,020;Fixo</pre>
     <tr><td>“Município não está na lista do modelo”</td><td>Corrija a grafia (com acentos) ou escolha o município na aba identificacao da planilha.</td></tr>
     <tr><td>Área diferente da calculada no QGIS em UTM</td><td>É esperado: a área do SIGEF é no SGL (plano local) e a do QGIS é na projeção UTM. A diferença costuma ser de poucos décimos por mil.</td></tr>
     <tr><td>O app não abre sem internet</td><td>Abra pelo menos uma vez com internet e instale (“Instalar app” ou “Adicionar à tela inicial”).</td></tr>
+    <tr><td>A matrícula não foi lida (OCR)</td><td>Fotografe de cima, com boa luz, sem sombra e com a página inteira. Na primeira vez é preciso internet para baixar o leitor. Se não der, preencha à mão.</td></tr>
     <tr><td>Perdi o projeto</td><td>Os dados ficam no navegador onde foram feitos. Para levar para outro aparelho, use Salvar/Abrir projeto (.json).</td></tr>
   </table>
 </div>
